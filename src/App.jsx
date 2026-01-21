@@ -118,6 +118,8 @@ function App() {
   const [overrides, setOverrides] = useState({ summer: null, autumn: null });
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
   const seasonalColors = {
     summer: {
@@ -207,6 +209,21 @@ function App() {
       setDiscount(suggestedStayDiscount / 100);
     }
   }, [season, suggestedStayDiscount, manualDiscountEdited]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      const dismissed = localStorage.getItem('installPromptDismissed');
+      if (!dismissed) {
+        setShowInstallPrompt(true);
+      }
+    };
+    
+    window.addEventListener('beforeinstallprompt', handler);
+    
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
 
   useEffect(() => {
     if (computed && canCalculate) {
@@ -405,6 +422,25 @@ function App() {
     }
   };
 
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+      console.log('Usuario aceptó instalar la PWA');
+    }
+    
+    setDeferredPrompt(null);
+    setShowInstallPrompt(false);
+  };
+
+  const handleDismissInstall = () => {
+    setShowInstallPrompt(false);
+    localStorage.setItem('installPromptDismissed', 'true');
+  };
+
   return (
     <ErrorBoundary>
     <div className={`min-h-screen ${isDarkMode ? 'bg-slate-900' : 'bg-gray-50'} transition-colors duration-200`}>
@@ -412,6 +448,34 @@ function App() {
         {feedbackMessage && (
           <div className={`fixed top-4 right-4 ${isDarkMode ? 'bg-slate-800' : 'bg-white'} px-6 py-3 rounded-lg shadow-lg z-50 border ${isDarkMode ? 'border-slate-700' : 'border-gray-200'}`}>
             <p className={`${isDarkMode ? 'text-white' : 'text-gray-900'} font-medium`}>{feedbackMessage}</p>
+          </div>
+        )}
+
+        {showInstallPrompt && (
+          <div className={`fixed bottom-4 left-4 right-4 ${isDarkMode ? 'bg-gradient-to-r from-slate-800 to-slate-900' : 'bg-gradient-to-r from-white to-gray-50'} p-4 rounded-2xl shadow-2xl z-50 border ${isDarkMode ? 'border-slate-700' : 'border-gray-200'} backdrop-blur-sm`}>
+            <div className="flex items-center gap-3">
+              <div className={`w-12 h-12 rounded-xl ${colors.primary} flex items-center justify-center flex-shrink-0`}>
+                <span className="text-2xl">{seasonEmoji}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className={`font-bold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Instalar aplicación</h3>
+                <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Accede rápido desde tu pantalla de inicio</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleDismissInstall}
+                  className={`px-3 py-2 rounded-xl text-xs font-medium ${isDarkMode ? 'text-gray-400 hover:bg-slate-700' : 'text-gray-600 hover:bg-gray-100'} transition-colors`}
+                >
+                  Ahora no
+                </button>
+                <button
+                  onClick={handleInstallClick}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold ${colors.primary} text-white shadow-md hover:shadow-lg transition-all`}
+                >
+                  Instalar
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
