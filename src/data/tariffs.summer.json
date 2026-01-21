@@ -1,0 +1,14 @@
+{
+  "season": "summer",
+  "currency": "ARS",
+  "peopleBands": [
+    { "people": 1, "pricePerNight": 85000 },
+    { "people": 2, "pricePerNight": 120000 },
+    { "people": 3, "pricePerNight": 145000 },
+    { "people": 4, "pricePerNight": 175000 },
+    { "people": 5, "pricePerNight": 200000 },
+    { "people": 6, "pricePerNight": 220000 },
+    { "people": 7, "pricePerNight": 240000 }
+  ],
+  "longStayDiscounts": []
+}
