@@ -377,11 +377,13 @@ function App() {
   const minSwipeDistance = 50;
 
   const onTouchStart = (e) => {
+    if (!e.targetTouches || e.targetTouches.length === 0) return;
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
   };
 
   const onTouchMove = (e) => {
+    if (!e.targetTouches || e.targetTouches.length === 0) return;
     setTouchEnd(e.targetTouches[0].clientX);
   };
 
