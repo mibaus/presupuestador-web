@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, Component } from 'react'
-import { Sun, Moon, Settings, Copy, Share2, X, Trash2, Plus } from 'lucide-react'
+import { useState, useEffect, useMemo, Component, useRef } from 'react'
+import { Sun, Moon, Gear, Copy, ShareNetwork, X, Trash, Plus, Users, CalendarBlank, CurrencyDollar, Percent, CreditCard, Calculator, Sparkle, Leaf } from '@phosphor-icons/react'
 import tariffsSummer from './data/tariffs.summer.json'
 import tariffsAutumn from './data/tariffs.autumn.json'
 
@@ -120,6 +120,7 @@ function App() {
   const [touchEnd, setTouchEnd] = useState(null);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const resumenRef = useRef(null);
 
   const seasonalColors = {
     summer: {
@@ -313,6 +314,13 @@ function App() {
         summerPaymentPlan,
         autumnPaymentPlan
       });
+
+      // Scroll automático al resumen después de calcular
+      setTimeout(() => {
+        if (resumenRef.current) {
+          resumenRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
     } catch (error) {
       console.error("Error al calcular:", error);
       setFeedbackMessage("Error al calcular");
@@ -459,7 +467,7 @@ function App() {
           <div className={`fixed bottom-4 left-4 right-4 ${isDarkMode ? 'bg-gradient-to-r from-slate-800 to-slate-900' : 'bg-gradient-to-r from-white to-gray-50'} p-4 rounded-2xl shadow-2xl z-50 border ${isDarkMode ? 'border-slate-700' : 'border-gray-200'} backdrop-blur-sm`}>
             <div className="flex items-center gap-3">
               <div className={`w-12 h-12 rounded-xl ${colors.primary} flex items-center justify-center flex-shrink-0`}>
-                <span className="text-2xl">{seasonEmoji}</span>
+                {season === 'summer' ? <Sun className="w-6 h-6 text-white" weight="duotone" /> : <Leaf className="w-6 h-6 text-white" weight="duotone" />}
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className={`font-bold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Instalar aplicación</h3>
@@ -489,7 +497,7 @@ function App() {
               <div className="flex justify-between items-center mb-4">
                 <h3 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Menú</h3>
                 <button onClick={() => setShowMenu(false)} className={`p-2 rounded-lg ${isDarkMode ? 'hover:bg-slate-700' : 'hover:bg-gray-100'}`}>
-                  <X className={`w-5 h-5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} />
+                  <X className={`w-5 h-5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} weight="bold" />
                 </button>
               </div>
               <div className="space-y-2">
@@ -500,7 +508,7 @@ function App() {
                   }}
                   className={`w-full p-4 rounded-xl ${isDarkMode ? 'bg-slate-700 hover:bg-slate-600' : 'bg-gray-100 hover:bg-gray-200'} transition-colors flex items-center gap-3`}
                 >
-                  <Settings className={`w-5 h-5 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`} />
+                  <Gear className="w-5 h-5" />
                   <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     {screen === 'main' ? 'Configuración' : 'Volver al calculador'}
                   </span>
@@ -512,7 +520,7 @@ function App() {
                   }}
                   className={`w-full p-4 rounded-xl ${isDarkMode ? 'bg-slate-700 hover:bg-slate-600' : 'bg-gray-100 hover:bg-gray-200'} transition-colors flex items-center gap-3`}
                 >
-                  {isDarkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-slate-700" />}
+                  {isDarkMode ? <Sun className="w-5 h-5 text-yellow-400" weight="duotone" /> : <Moon className="w-5 h-5 text-slate-700" weight="duotone" />}
                   <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     Modo {isDarkMode ? 'claro' : 'oscuro'}
                   </span>
@@ -526,22 +534,22 @@ function App() {
           <div className={`inline-flex gap-1 ${isDarkMode ? 'bg-slate-800/50' : 'bg-gray-100/80'} p-1 rounded-full backdrop-blur-sm`}>
             <button
               onClick={() => setSeason('summer')}
-              className={`px-3.5 py-1.5 rounded-full transition-all duration-200 ${season === 'summer' ? `${colors.primary} text-white shadow-sm scale-100` : `${isDarkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'} scale-95 hover:scale-100`}`}
+              className={`px-3.5 py-1.5 rounded-full transition-all duration-200 ${season === 'summer' ? `${colors.primary} text-white shadow-md` : `${isDarkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'} scale-95 hover:scale-100`}`}
             >
-              <span className="text-lg">🏖️</span>
+              <Sun className="w-5 h-5" weight="duotone" />
             </button>
             <button
               onClick={() => setSeason('autumn')}
-              className={`px-3.5 py-1.5 rounded-full transition-all duration-200 ${season === 'autumn' ? `${seasonalColors.autumn.primary} text-white shadow-sm scale-100` : `${isDarkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'} scale-95 hover:scale-100`}`}
+              className={`px-3.5 py-1.5 rounded-full transition-all duration-200 ${season === 'autumn' ? `${seasonalColors.autumn.primary} text-white shadow-md` : `${isDarkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'} scale-95 hover:scale-100`}`}
             >
-              <span className="text-lg">🍂</span>
+              <Leaf className="w-5 h-5" weight="duotone" />
             </button>
           </div>
           <button
             onClick={() => setShowMenu(true)}
             className={`p-2.5 rounded-full ${isDarkMode ? 'bg-slate-800/50 hover:bg-slate-700/50' : 'bg-gray-100/80 hover:bg-gray-200/80'} backdrop-blur-sm transition-all duration-200`}
           >
-            <Settings className={`w-4.5 h-4.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+            <Gear className={`w-4.5 h-4.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} weight="duotone" />
           </button>
         </div>
 
@@ -581,6 +589,7 @@ function App() {
             onShare={onShare}
             getSummaryText={getSummaryText}
             setFeedbackMessage={setFeedbackMessage}
+            resumenRef={resumenRef}
           />
           </div>
         ) : (
@@ -608,7 +617,7 @@ function MainScreen({
   setNumberOfPeople, discount, setDiscount, setManualDiscountEdited,
   discountOptions, summerPaymentPlan, setSummerPaymentPlan, autumnPaymentPlan, setAutumnPaymentPlan, canCalculate,
   onCalculate, onClear, computed, formatARS, onCopyToClipboard, onShare,
-  getSummaryText, setFeedbackMessage
+  getSummaryText, setFeedbackMessage, resumenRef
 }) {
   return (
     <div className="space-y-6">
@@ -624,7 +633,7 @@ function MainScreen({
               value={numberOfPeople}
               onChange={(e) => setNumberOfPeople(e.target.value)}
               placeholder=""
-              className={`w-full px-3.5 py-3.5 rounded-xl border ${isDarkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-900'} focus:outline-none text-lg mb-4`}
+              className={`w-full px-2 py-3 bg-transparent border-0 border-b-2 ${isDarkMode ? 'border-slate-600 text-white focus:border-slate-400 focus:bg-slate-800/30' : 'border-gray-300 text-gray-900 focus:border-gray-500 focus:bg-gray-50'} focus:outline-none focus:ring-0 text-lg mb-4 transition-all duration-200`}
             />
           </div>
 
@@ -638,7 +647,7 @@ function MainScreen({
               value={numberOfNights}
               onChange={(e) => setNumberOfNights(e.target.value)}
               placeholder=""
-              className={`w-full px-3.5 py-3.5 rounded-xl border ${isDarkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-900'} focus:outline-none text-lg mb-4`}
+              className={`w-full px-2 py-3 bg-transparent border-0 border-b-2 ${isDarkMode ? 'border-slate-600 text-white focus:border-slate-400 focus:bg-slate-800/30' : 'border-gray-300 text-gray-900 focus:border-gray-500 focus:bg-gray-50'} focus:outline-none focus:ring-0 text-lg mb-4 transition-all duration-200`}
             />
           </div>
 
@@ -655,7 +664,7 @@ function MainScreen({
                 setManualPriceEdited(true);
               }}
               placeholder=""
-              className={`w-full px-3.5 py-3.5 rounded-xl border ${isDarkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-900'} focus:outline-none text-lg mb-4`}
+              className={`w-full px-2 py-3 bg-transparent border-0 border-b-2 ${isDarkMode ? 'border-slate-600 text-white focus:border-slate-400 focus:bg-slate-800/30' : 'border-gray-300 text-gray-900 focus:border-gray-500 focus:bg-gray-50'} focus:outline-none focus:ring-0 text-lg mb-4 transition-all duration-200`}
             />
           </div>
 
@@ -668,10 +677,10 @@ function MainScreen({
                   setDiscount(newVal);
                   setManualDiscountEdited(true);
                 }}
-                className={`flex-1 py-2.5 rounded-xl font-semibold transition-all border ${
+                className={`flex-1 py-2.5 rounded-xl font-semibold transition-all border backdrop-blur-xl ${
                   discount === opt.value 
-                    ? `${colors.primary} ${colors.border} text-white shadow-md` 
-                    : `${isDarkMode ? 'bg-slate-800' : 'bg-white'} ${colors.border} hover:opacity-80 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`
+                    ? `${colors.primary} ${colors.border} text-white shadow-lg` 
+                    : `${isDarkMode ? 'bg-slate-800/20 border-slate-700/30' : 'bg-white/20 border-gray-300/30'} hover:${isDarkMode ? 'bg-slate-800/40' : 'bg-white/40'} ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`
                 }`}
               >
                 {opt.label}
@@ -687,13 +696,13 @@ function MainScreen({
               <div className="flex gap-2.5 mb-4">
                 <button
                   onClick={() => season === 'summer' ? setSummerPaymentPlan('3') : setAutumnPaymentPlan('3')}
-                  className={`flex-1 py-2.5 rounded-xl font-semibold transition-all border ${(season === 'summer' ? summerPaymentPlan : autumnPaymentPlan) === '3' ? `${colors.primary} ${colors.border} text-white` : `${isDarkMode ? 'bg-slate-800' : 'bg-white'} ${colors.border} ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}`}
+                  className={`flex-1 py-2.5 rounded-xl font-semibold transition-all border backdrop-blur-xl ${(season === 'summer' ? summerPaymentPlan : autumnPaymentPlan) === '3' ? `${colors.primary} ${colors.border} text-white shadow-lg` : `${isDarkMode ? 'bg-slate-800/20 border-slate-700/30' : 'bg-white/20 border-gray-300/30'} hover:${isDarkMode ? 'bg-slate-800/40' : 'bg-white/40'} ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}`}
                 >
                   3 pagos
                 </button>
                 <button
                   onClick={() => season === 'summer' ? setSummerPaymentPlan('2') : setAutumnPaymentPlan('2')}
-                  className={`flex-1 py-2.5 rounded-xl font-semibold transition-all border ${(season === 'summer' ? summerPaymentPlan : autumnPaymentPlan) === '2' ? `${colors.primary} ${colors.border} text-white` : `${isDarkMode ? 'bg-slate-800' : 'bg-white'} ${colors.border} ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}`}
+                  className={`flex-1 py-2.5 rounded-xl font-semibold transition-all border backdrop-blur-xl ${(season === 'summer' ? summerPaymentPlan : autumnPaymentPlan) === '2' ? `${colors.primary} ${colors.border} text-white shadow-lg` : `${isDarkMode ? 'bg-slate-800/20 border-slate-700/30' : 'bg-white/20 border-gray-300/30'} hover:${isDarkMode ? 'bg-slate-800/40' : 'bg-white/40'} ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}`}
                 >
                   2 pagos
                 </button>
@@ -705,13 +714,13 @@ function MainScreen({
             <button
               onClick={onCalculate}
               disabled={!canCalculate}
-              className={`flex-1 py-3 rounded-xl font-bold text-base transition-all ${canCalculate ? `${colors.primary} text-white` : `${isDarkMode ? 'bg-slate-700 text-gray-500' : 'bg-gray-200 text-gray-400'} cursor-not-allowed`}`}
+              className={`flex-1 py-3 rounded-xl font-bold text-base transition-all backdrop-blur-xl ${canCalculate ? `${colors.primary} text-white shadow-xl` : `${isDarkMode ? 'bg-slate-700/20 text-gray-500' : 'bg-gray-200/20 text-gray-400'} cursor-not-allowed`}`}
             >
               Calcular
             </button>
             <button
               onClick={onClear}
-              className={`flex-1 py-3 rounded-xl font-bold text-base border transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-gray-300' : 'bg-white border-gray-300 text-gray-700'}`}
+              className={`flex-1 py-3 rounded-xl font-bold text-base border transition-all backdrop-blur-xl ${isDarkMode ? 'bg-slate-800/20 border-slate-700/30 hover:bg-slate-800/40 text-gray-300' : 'bg-white/20 border-gray-300/30 hover:bg-white/40 text-gray-700'}`}
             >
               Limpiar
             </button>
@@ -720,108 +729,70 @@ function MainScreen({
       </div>
 
       {computed && (
-        <div className="mt-5">
-          <h2 className={`text-lg font-bold mb-2.5 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+        <div ref={resumenRef} className="mt-5 space-y-3">
+          <h2 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
             Resumen
           </h2>
 
-          <div className={`${isDarkMode ? 'bg-slate-800' : 'bg-white'} rounded-xl p-3 shadow-sm border-l-4 ${isDarkMode ? 'border-yellow-500' : 'border-yellow-400'} mb-2.5`}>
-            <div className="flex justify-between items-center">
-              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                {formatARS(computed.pricePerNightCents)} × {computed.nights} noche{computed.nights > 1 ? 's' : ''}
-              </p>
-              {discount === 0 && (
-                <button
-                  onClick={() => onCopyToClipboard(computed.totalOriginal, 'Total')}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-slate-900/50' : 'bg-gray-100'} hover:opacity-80 transition-opacity`}
-                >
-                  <span className="text-base">📋</span>
-                </button>
+          {/* Total Card */}
+          <div className={`backdrop-blur-xl ${isDarkMode ? 'bg-slate-800/20' : 'bg-white/20'} rounded-xl p-4 border ${isDarkMode ? 'border-slate-700/30' : 'border-gray-300/30'}`}>
+            <div className="flex justify-between items-start mb-2">
+              <div>
+                <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mb-1`}>Total</p>
+                <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  {discount > 0 ? formatARS(computed.totalWithDiscount) : formatARS(computed.totalOriginal)}
+                </p>
+              </div>
+              {discount > 0 && (
+                <span className={`text-xs font-semibold px-2 py-1 rounded-full ${isDarkMode ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700'}`}>
+                  -{discount * 100}%
+                </span>
               )}
             </div>
-            <p className={`text-xl font-extrabold mt-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              Total: {formatARS(computed.totalOriginal)}
+            <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              {formatARS(computed.pricePerNightCents)} × {computed.nights} {computed.nights > 1 ? 'noches' : 'noche'}
             </p>
           </div>
 
-          {discount > 0 && (
-            <div className={`${isDarkMode ? 'bg-slate-800' : 'bg-white'} rounded-xl p-3 shadow-sm border-l-4 ${isDarkMode ? 'border-slate-500' : 'border-gray-400'} mb-2.5`}>
+          {/* Pagos Grid */}
+          <div className="grid gap-2">
+            {/* Seña */}
+            <div className={`backdrop-blur-xl ${isDarkMode ? 'bg-slate-800/20' : 'bg-white/20'} rounded-xl p-3 border ${isDarkMode ? 'border-slate-700/30' : 'border-gray-300/30'}`}>
               <div className="flex justify-between items-center">
-                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Total con descuento ({discount * 100}%)
-                </p>
-                <button
-                  onClick={() => onCopyToClipboard(computed.totalWithDiscount, 'Total con descuento')}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-slate-900/50' : 'bg-gray-100'} hover:opacity-80 transition-opacity`}
-                >
-                  <span className="text-base">📋</span>
-                </button>
+                <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Seña</span>
+                <span className={`text-base font-bold ${colors.text}`}>{formatARS(computed.sena)}</span>
               </div>
-              <p className={`text-xl font-extrabold mt-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {formatARS(computed.totalWithDiscount)}
-              </p>
             </div>
-          )}
 
-          <div className={`${isDarkMode ? 'bg-slate-800' : 'bg-white'} rounded-xl p-3 shadow-sm border-l-4 ${season === 'summer' ? (isDarkMode ? 'border-yellow-500' : 'border-yellow-400') : (isDarkMode ? 'border-orange-500' : 'border-orange-400')} mb-2.5`}>
-            <div className="flex justify-between items-center">
-              <p className={`text-sm ${colors.text}`}>
-                Seña ({computed.season === 'summer' ? (computed.summerPaymentPlan === '2' ? '50%' : '20%') : (computed.autumnPaymentPlan === '2' ? '50%' : '20%')})
-              </p>
-              <button
-                onClick={() => onCopyToClipboard(computed.sena, 'Seña')}
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${colors.accent} hover:opacity-80 transition-opacity`}
-              >
-                <span className="text-base">📋</span>
-              </button>
-            </div>
-            <p className={`text-xl font-extrabold mt-1 ${colors.text}`}>
-              {formatARS(computed.sena)}
-            </p>
-          </div>
+            {/* Segundo Pago */}
+            {computed.segundo > 0 && (
+              <div className={`backdrop-blur-xl ${isDarkMode ? 'bg-slate-800/20' : 'bg-white/20'} rounded-xl p-3 border ${isDarkMode ? 'border-slate-700/30' : 'border-gray-300/30'}`}>
+                <div className="flex justify-between items-center">
+                  <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Segundo pago</span>
+                  <span className={`text-base font-bold ${colors.text}`}>{formatARS(computed.segundo)}</span>
+                </div>
+              </div>
+            )}
 
-          {computed.segundo > 0 && (
-            <div className={`${isDarkMode ? 'bg-slate-800' : 'bg-white'} rounded-xl p-3 shadow-sm border-l-4 ${season === 'summer' ? (isDarkMode ? 'border-yellow-400' : 'border-yellow-300') : (isDarkMode ? 'border-orange-400' : 'border-orange-300')} mb-2.5`}>
+            {/* Saldo Final */}
+            <div className={`backdrop-blur-xl ${isDarkMode ? 'bg-slate-800/20' : 'bg-white/20'} rounded-xl p-3 border ${isDarkMode ? 'border-slate-700/30' : 'border-gray-300/30'}`}>
               <div className="flex justify-between items-center">
-                <p className={`text-sm ${seasonalColors[season].text}`}>
-                  Segundo pago (30%)
-                </p>
-                <button
-                  onClick={() => onCopyToClipboard(computed.segundo, 'Segundo pago')}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${colors.accent} hover:opacity-80 transition-opacity`}
-                >
-                  <span className="text-base">📋</span>
-                </button>
+                <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  {computed.season === 'summer' ? (computed.summerPaymentPlan === '2' ? 'Segundo pago' : 'Saldo final') : (computed.autumnPaymentPlan === '2' ? 'Segundo pago' : 'Saldo final')}
+                </span>
+                <span className={`text-base font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatARS(computed.saldo)}</span>
               </div>
-              <p className={`text-xl font-extrabold mt-1 ${seasonalColors[season].text}`}>
-                {formatARS(computed.segundo)}
-              </p>
             </div>
-          )}
-
-          <div className={`${isDarkMode ? 'bg-slate-800' : 'bg-white'} rounded-xl p-3 shadow-sm border-l-4 ${isDarkMode ? 'border-red-500' : 'border-red-400'} mb-2.5`}>
-            <div className="flex justify-between items-center">
-              <p className={`text-sm ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
-                {computed.season === 'summer' ? (computed.summerPaymentPlan === '2' ? 'Segundo pago (50%)' : 'Saldo final (50%)') : (computed.autumnPaymentPlan === '2' ? 'Segundo pago (50%)' : 'Saldo final (50%)')}
-              </p>
-              <button
-                onClick={() => onCopyToClipboard(computed.saldo, computed.season === 'summer' ? (computed.summerPaymentPlan === '2' ? 'Segundo pago' : 'Saldo final') : 'Segundo pago')}
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-red-900/30' : 'bg-red-50'} hover:opacity-80 transition-opacity`}
-              >
-                <span className="text-base">📋</span>
-              </button>
-            </div>
-            <p className={`text-xl font-extrabold mt-1 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
-              {formatARS(computed.saldo)}
-            </p>
           </div>
 
-          <div className="flex gap-3 mt-2">
+          {/* Botones de acción */}
+          <div className="flex gap-3 mt-6 pt-4">
             <button
               onClick={onShare}
-              className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${isDarkMode ? 'bg-slate-800 text-white border border-slate-700' : 'bg-white text-gray-900 border border-gray-300'}`}
+              className={`flex-1 py-3.5 rounded-xl font-bold text-sm transition-all duration-200 backdrop-blur-xl ${isDarkMode ? 'bg-slate-800/20 text-white border-2 border-slate-700/30 hover:bg-slate-800/40' : 'bg-white/20 text-gray-900 border-2 border-gray-300/30 hover:bg-white/40'} flex items-center justify-center gap-2`}
             >
-              Compartir todo
+              <ShareNetwork className="w-5 h-5" weight="duotone" />
+              Compartir
             </button>
             <button
               onClick={async () => {
@@ -836,8 +807,9 @@ function MainScreen({
                   setTimeout(() => setFeedbackMessage(''), 2000);
                 }
               }}
-              className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${colors.primary} text-white`}
+              className={`flex-1 py-3.5 rounded-xl font-bold text-sm transition-all duration-200 ${colors.primary} text-white shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2`}
             >
+              <Copy className="w-5 h-5" weight="duotone" />
               Copiar
             </button>
           </div>
@@ -853,7 +825,7 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
     <div className="space-y-5">
       <div className={`flex items-center gap-3 mb-6`}>
         <div className={`w-10 h-10 rounded-xl ${colors.primary} flex items-center justify-center`}>
-          <Settings className="w-5 h-5 text-white" />
+              <Gear className="w-6 h-6 text-white" />
         </div>
         <div>
           <h1 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
@@ -869,7 +841,7 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
         <div className={`absolute top-0 left-0 w-1 h-full ${colors.primary}`}></div>
         <div className="flex items-center gap-3 mb-3">
           <div className={`w-10 h-10 rounded-xl ${colors.accent} flex items-center justify-center`}>
-            <span className="text-xl">👥</span>
+            <Users className="w-5 h-5" weight="duotone" />
           </div>
           <div>
             <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Tarifas por huéspedes</h3>
@@ -898,14 +870,14 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
                           next[season] = { ...(next[season] || {}), peopleBands: list };
                           setOverrides(next);
                         }}
-                        className={`w-full px-3 py-2.5 rounded-xl ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white focus:border-slate-600' : 'bg-white border-gray-300 text-gray-900 focus:border-gray-400'} border-2 font-bold text-center text-lg ${colors.text} transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0 ${isDarkMode ? 'focus:ring-slate-600' : 'focus:ring-gray-300'}`}
+                        className={`w-full px-2 py-2.5 bg-transparent border-0 border-b-2 ${isDarkMode ? 'border-slate-600 text-white focus:border-slate-400 focus:bg-slate-800/30' : 'border-gray-300 text-gray-900 focus:border-gray-500 focus:bg-gray-50'} font-bold text-center text-lg ${colors.text} transition-all duration-200 focus:outline-none focus:ring-0`}
                       />
                     </div>
                     <div>
                       <label className={`block text-xs font-medium mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                         💰 Precio/Noche
                       </label>
-                      <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-300'} border-2`}>
+                      <div className={`flex items-center gap-2 px-2 py-2.5 bg-transparent border-0 border-b-2 ${isDarkMode ? 'border-slate-600 focus-within:border-slate-400 focus-within:bg-slate-800/30' : 'border-gray-300 focus-within:border-gray-500 focus-within:bg-gray-50'} transition-all duration-200`}>
                         <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>$</span>
                         <input
                           type="number"
@@ -934,7 +906,7 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
                   }}
                   className={`p-2.5 rounded-xl ${isDarkMode ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600'} transition-all duration-200 opacity-0 group-hover:opacity-100`}
                 >
-                  <Trash2 className="w-4.5 h-4.5" />
+                  <Trash className="w-4.5 h-4.5" weight="duotone" />
                 </button>
               </div>
             </div>
@@ -951,7 +923,7 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
           }}
           className={`w-full mt-4 py-3 rounded-xl border-2 ${isDarkMode ? 'border-dashed border-slate-600 hover:border-slate-500 hover:bg-slate-800/50' : 'border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50'} ${colors.text} font-medium transition-all duration-200 flex items-center justify-center gap-2`}
         >
-          <Plus className="w-4.5 h-4.5" />
+          <Plus className="w-4.5 h-4.5" weight="bold" />
           <span className="text-sm">Agregar tarifa</span>
         </button>
       </div>
@@ -960,7 +932,7 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
         <div className={`absolute top-0 left-0 w-1 h-full ${colors.primary}`}></div>
         <div className="flex items-center gap-3 mb-3">
           <div className={`w-10 h-10 rounded-xl ${colors.accent} flex items-center justify-center`}>
-            <span className="text-xl">🎯</span>
+            <Percent className="w-5 h-5" weight="duotone" />
           </div>
           <div>
             <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Descuentos por estadía</h3>
@@ -987,7 +959,7 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
                       next[season] = { ...(next[season] || {}), longStayDiscounts: list };
                       setOverrides(next);
                     }}
-                    className={`w-full px-3 py-2.5 rounded-xl ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-gray-300 text-gray-900'} border-2 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0 ${isDarkMode ? 'focus:ring-slate-600' : 'focus:ring-gray-300'}`}
+                    className={`w-full px-2 py-2.5 bg-transparent border-0 border-b-2 ${isDarkMode ? 'border-slate-600 text-white focus:border-slate-400 focus:bg-slate-800/30' : 'border-gray-300 text-gray-900 focus:border-gray-500 focus:bg-gray-50'} font-semibold transition-all duration-200 focus:outline-none focus:ring-0`}
                   />
                 </div>
                 <div className="flex-1">
@@ -1005,7 +977,7 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
                       next[season] = { ...(next[season] || {}), longStayDiscounts: list };
                       setOverrides(next);
                     }}
-                    className={`w-full px-3 py-2.5 rounded-xl ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-gray-300 text-gray-900'} border-2 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0 ${isDarkMode ? 'focus:ring-slate-600' : 'focus:ring-gray-300'}`}
+                    className={`w-full px-2 py-2.5 bg-transparent border-0 border-b-2 ${isDarkMode ? 'border-slate-600 text-white focus:border-slate-400 focus:bg-slate-800/30' : 'border-gray-300 text-gray-900 focus:border-gray-500 focus:bg-gray-50'} font-semibold transition-all duration-200 focus:outline-none focus:ring-0`}
                   />
                 </div>
                 <button
@@ -1018,7 +990,7 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
                   }}
                   className={`p-2.5 rounded-xl ${isDarkMode ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600'} transition-all duration-200 opacity-0 group-hover:opacity-100`}
                 >
-                  <Trash2 className="w-4.5 h-4.5" />
+                  <Trash className="w-4.5 h-4.5" weight="duotone" />
                 </button>
               </div>
             </div>
@@ -1035,7 +1007,7 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
           }}
           className={`w-full mt-4 py-3 rounded-xl border-2 ${isDarkMode ? 'border-dashed border-slate-600 hover:border-slate-500 hover:bg-slate-800/50' : 'border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50'} ${colors.text} font-medium transition-all duration-200 flex items-center justify-center gap-2`}
         >
-          <Plus className="w-4.5 h-4.5" />
+          <Plus className="w-4.5 h-4.5" weight="bold" />
           <span className="text-sm">Agregar descuento</span>
         </button>
       </div>
@@ -1045,7 +1017,7 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
           onClick={() => saveOverrides(overrides)}
           className={`w-full py-4 rounded-2xl ${colors.primary} text-white font-bold text-base hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-xl flex items-center justify-center gap-2`}
         >
-          <Settings className="w-5 h-5" />
+          <Gear className="w-5 h-5" weight="duotone" />
           Guardar cambios
         </button>
       </div>
