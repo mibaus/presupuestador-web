@@ -425,15 +425,19 @@ function App() {
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
     
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    
-    if (outcome === 'accepted') {
-      console.log('Usuario aceptó instalar la PWA');
+    try {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        console.log('Usuario aceptó instalar la PWA');
+      }
+    } catch (error) {
+      console.error('Error al mostrar prompt de instalación:', error);
+    } finally {
+      setDeferredPrompt(null);
+      setShowInstallPrompt(false);
     }
-    
-    setDeferredPrompt(null);
-    setShowInstallPrompt(false);
   };
 
   const handleDismissInstall = () => {
@@ -451,7 +455,7 @@ function App() {
           </div>
         )}
 
-        {showInstallPrompt && (
+        {showInstallPrompt && colors && seasonEmoji && (
           <div className={`fixed bottom-4 left-4 right-4 ${isDarkMode ? 'bg-gradient-to-r from-slate-800 to-slate-900' : 'bg-gradient-to-r from-white to-gray-50'} p-4 rounded-2xl shadow-2xl z-50 border ${isDarkMode ? 'border-slate-700' : 'border-gray-200'} backdrop-blur-sm`}>
             <div className="flex items-center gap-3">
               <div className={`w-12 h-12 rounded-xl ${colors.primary} flex items-center justify-center flex-shrink-0`}>
