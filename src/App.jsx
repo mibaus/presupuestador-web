@@ -116,6 +116,8 @@ function App() {
   const [screen, setScreen] = useState('main');
   const [showMenu, setShowMenu] = useState(false);
   const [overrides, setOverrides] = useState({ summer: null, autumn: null });
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
 
   const seasonalColors = {
     summer: {
@@ -372,6 +374,32 @@ function App() {
   const seasonEmoji = season === 'summer' ? '🏖️' : '🍂';
   const colors = seasonalColors[season];
 
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe) {
+      setSeason(season === 'summer' ? 'autumn' : 'summer');
+    }
+    if (isRightSwipe) {
+      setSeason(season === 'autumn' ? 'summer' : 'autumn');
+    }
+  };
+
   return (
     <ErrorBoundary>
     <div className={`min-h-screen ${isDarkMode ? 'bg-slate-900' : 'bg-gray-50'} transition-colors duration-200`}>
@@ -422,29 +450,34 @@ function App() {
         )}
 
         <div className="flex justify-between items-center mb-6">
-          <div className={`flex gap-2 ${isDarkMode ? 'bg-slate-800' : 'bg-white'} p-1.5 rounded-xl shadow-sm border ${isDarkMode ? 'border-slate-700' : 'border-gray-200'}`}>
+          <div className={`inline-flex gap-1 ${isDarkMode ? 'bg-slate-800/50' : 'bg-gray-100/80'} p-1 rounded-full backdrop-blur-sm`}>
             <button
               onClick={() => setSeason('summer')}
-              className={`px-4 py-2 rounded-lg transition-all ${season === 'summer' ? `${colors.primary} text-white shadow-md` : `${isDarkMode ? 'hover:bg-slate-700 text-gray-400' : 'hover:bg-gray-100 text-gray-600'}`}`}
+              className={`px-3.5 py-1.5 rounded-full transition-all duration-200 ${season === 'summer' ? `${colors.primary} text-white shadow-sm scale-100` : `${isDarkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'} scale-95 hover:scale-100`}`}
             >
-              <span className="text-xl">🏖️</span>
+              <span className="text-lg">🏖️</span>
             </button>
             <button
               onClick={() => setSeason('autumn')}
-              className={`px-4 py-2 rounded-lg transition-all ${season === 'autumn' ? `${seasonalColors.autumn.primary} text-white shadow-md` : `${isDarkMode ? 'hover:bg-slate-700 text-gray-400' : 'hover:bg-gray-100 text-gray-600'}`}`}
+              className={`px-3.5 py-1.5 rounded-full transition-all duration-200 ${season === 'autumn' ? `${seasonalColors.autumn.primary} text-white shadow-sm scale-100` : `${isDarkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'} scale-95 hover:scale-100`}`}
             >
-              <span className="text-xl">🍂</span>
+              <span className="text-lg">🍂</span>
             </button>
           </div>
           <button
             onClick={() => setShowMenu(true)}
-            className={`p-3 rounded-xl ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700 border-slate-700' : 'bg-white hover:bg-gray-50 border-gray-200'} border shadow-sm transition-colors`}
+            className={`p-2.5 rounded-full ${isDarkMode ? 'bg-slate-800/50 hover:bg-slate-700/50' : 'bg-gray-100/80 hover:bg-gray-200/80'} backdrop-blur-sm transition-all duration-200`}
           >
-            <Settings className={`w-5 h-5 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`} />
+            <Settings className={`w-4.5 h-4.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
           </button>
         </div>
 
         {screen === 'main' ? (
+          <div
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
           <MainScreen
             isDarkMode={isDarkMode}
             season={season}
@@ -476,6 +509,7 @@ function App() {
             getSummaryText={getSummaryText}
             setFeedbackMessage={setFeedbackMessage}
           />
+          </div>
         ) : (
           <AdminScreen
             isDarkMode={isDarkMode}
