@@ -645,7 +645,13 @@ function MainScreen({
               type="number"
               inputMode="numeric"
               value={numberOfNights}
-              onChange={(e) => setNumberOfNights(e.target.value)}
+              onChange={(e) => {
+                setNumberOfNights(e.target.value);
+                // Ocultar teclado después de escribir
+                if (e.target.value.length > 0) {
+                  setTimeout(() => e.target.blur(), 500);
+                }
+              }}
               placeholder=""
               className={`w-full px-2 py-3 bg-transparent border-0 border-b-2 ${isDarkMode ? 'border-slate-600 text-white focus:border-slate-400 focus:bg-slate-800/30' : 'border-gray-300 text-gray-900 focus:border-gray-500 focus:bg-gray-50'} focus:outline-none focus:ring-0 text-lg mb-4 transition-all duration-200`}
             />
