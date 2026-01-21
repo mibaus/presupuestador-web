@@ -219,7 +219,10 @@ function App() {
       localStorage.setItem('tariffOverrides', JSON.stringify(newOverrides));
       setOverrides(newOverrides);
       setFeedbackMessage('Cambios guardados');
-      setTimeout(() => setFeedbackMessage(''), 1500);
+      setTimeout(() => {
+        setFeedbackMessage('');
+        setScreen('main');
+      }, 1500);
     } catch (e) {
       console.error('Error saving overrides', e);
       setFeedbackMessage('Error al guardar');
@@ -779,85 +782,78 @@ function MainScreen({
 
 function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, activeTariffs, overrides, setOverrides, saveOverrides }) {
   return (
-    <div className="space-y-6">
-      <div className={`${isDarkMode ? 'bg-slate-800' : 'bg-white'} rounded-2xl p-6 shadow-lg border ${isDarkMode ? 'border-slate-700' : 'border-gray-200'}`}>
-        <h1 className={`text-3xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-          ⚙️ Configuración
-        </h1>
-        <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-          Administrar tarifas y descuentos
-        </p>
-      </div>
-
-      <div className={`${isDarkMode ? 'bg-slate-800' : 'bg-white'} rounded-2xl p-6 shadow-lg border ${isDarkMode ? 'border-slate-700' : 'border-gray-200'}`}>
-        <h3 className={`text-lg font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Seleccionar temporada</h3>
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            { key: 'summer', emoji: '🏖️', label: 'Verano' },
-            { key: 'autumn', emoji: '🍂', label: 'Otoño' }
-          ].map(s => (
-            <button
-              key={s.key}
-              onClick={() => setSeason(s.key)}
-              className={`p-4 rounded-xl border-2 transition-all ${season === s.key ? `${seasonalColors[s.key].primary} border-transparent text-white shadow-lg` : `${isDarkMode ? 'bg-slate-700 border-slate-600 hover:bg-slate-600 text-gray-300' : 'bg-gray-50 border-gray-300 hover:bg-gray-100 text-gray-700'}`}`}
-            >
-              <div className="text-3xl mb-2">{s.emoji}</div>
-              <div className="font-semibold">{s.label}</div>
-            </button>
-          ))}
+    <div className="space-y-5">
+      <div className={`flex items-center gap-3 mb-6`}>
+        <div className={`w-10 h-10 rounded-xl ${colors.primary} flex items-center justify-center`}>
+          <Settings className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <h1 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            Configuración
+          </h1>
+          <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            Gestiona tarifas y descuentos
+          </p>
         </div>
       </div>
 
-      <div className={`${isDarkMode ? 'bg-slate-800' : 'bg-white'} rounded-2xl p-6 shadow-lg border-l-4 ${colors.border} ${isDarkMode ? 'border-t border-r border-b border-slate-700' : 'border-t border-r border-b border-gray-200'}`}>
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-2xl">👥</span>
-          <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Tarifas por huéspedes</h3>
+      <div className={`${isDarkMode ? 'bg-slate-800/50' : 'bg-white/80'} backdrop-blur-sm rounded-2xl p-6 shadow-lg border ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200/50'} relative overflow-hidden`}>
+        <div className={`absolute top-0 left-0 w-1 h-full ${colors.primary}`}></div>
+        <div className="flex items-center gap-3 mb-3">
+          <div className={`w-10 h-10 rounded-xl ${colors.accent} flex items-center justify-center`}>
+            <span className="text-xl">👥</span>
+          </div>
+          <div>
+            <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Tarifas por huéspedes</h3>
+            <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Precio por noche según capacidad</p>
+          </div>
         </div>
-        <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} mb-6`}>
-          Define el precio por noche según cantidad de personas
-        </p>
 
-        <div className="space-y-4">
+        <div className="space-y-3 mt-5">
           {(overrides[season]?.peopleBands || activeTariffs.peopleBands || []).map((b, idx) => (
-            <div key={idx} className={`p-4 rounded-xl border-2 ${colors.border} ${colors.accent}`}>
-              <div className="flex gap-4 items-center">
-                <div className="flex-1">
-                  <label className={`block text-xs font-semibold mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} uppercase`}>
-                    👤 Personas
-                  </label>
-                  <input
-                    type="number"
-                    value={b.people}
-                    onChange={(e) => {
-                      const n = parseInt(e.target.value) || 0;
-                      const next = JSON.parse(JSON.stringify(overrides));
-                      const list = next[season]?.peopleBands ? next[season].peopleBands : JSON.parse(JSON.stringify(activeTariffs.peopleBands));
-                      list[idx] = { ...list[idx], people: n };
-                      next[season] = { ...(next[season] || {}), peopleBands: list };
-                      setOverrides(next);
-                    }}
-                    className={`w-full px-3 py-2 rounded-lg border-2 ${isDarkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-900'} font-bold text-center text-xl ${colors.text}`}
-                  />
-                </div>
-                <div className="flex-[2]">
-                  <label className={`block text-xs font-semibold mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} uppercase`}>
-                    💰 Precio/Noche
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>$</span>
-                    <input
-                      type="number"
-                      value={b.pricePerNight || 0}
-                      onChange={(e) => {
-                        const n = parseInt(e.target.value) || 0;
-                        const next = JSON.parse(JSON.stringify(overrides));
-                        const list = next[season]?.peopleBands ? next[season].peopleBands : JSON.parse(JSON.stringify(activeTariffs.peopleBands));
-                        list[idx] = { ...list[idx], pricePerNight: n };
-                        next[season] = { ...(next[season] || {}), peopleBands: list };
-                        setOverrides(next);
-                      }}
-                      className={`flex-1 px-3 py-2 rounded-lg border-2 ${isDarkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-900'} font-semibold text-lg`}
-                    />
+            <div key={idx} className={`group p-4 rounded-xl ${isDarkMode ? 'bg-slate-900/50 hover:bg-slate-900/70' : 'bg-gray-50 hover:bg-gray-100'} border ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200'} transition-all duration-200`}>
+              <div className="flex gap-3 items-start">
+                <div className="flex-1 min-w-0">
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                      <label className={`block text-xs font-medium mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        👤 Personas
+                      </label>
+                      <input
+                        type="number"
+                        value={b.people}
+                        onChange={(e) => {
+                          const n = parseInt(e.target.value) || 0;
+                          const next = JSON.parse(JSON.stringify(overrides));
+                          const list = next[season]?.peopleBands ? next[season].peopleBands : JSON.parse(JSON.stringify(activeTariffs.peopleBands));
+                          list[idx] = { ...list[idx], people: n };
+                          next[season] = { ...(next[season] || {}), peopleBands: list };
+                          setOverrides(next);
+                        }}
+                        className={`w-full px-3 py-2.5 rounded-xl ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white focus:border-slate-600' : 'bg-white border-gray-300 text-gray-900 focus:border-gray-400'} border-2 font-bold text-center text-lg ${colors.text} transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0 ${isDarkMode ? 'focus:ring-slate-600' : 'focus:ring-gray-300'}`}
+                      />
+                    </div>
+                    <div>
+                      <label className={`block text-xs font-medium mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        💰 Precio/Noche
+                      </label>
+                      <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-300'} border-2`}>
+                        <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>$</span>
+                        <input
+                          type="number"
+                          value={b.pricePerNight || 0}
+                          onChange={(e) => {
+                            const n = parseInt(e.target.value) || 0;
+                            const next = JSON.parse(JSON.stringify(overrides));
+                            const list = next[season]?.peopleBands ? next[season].peopleBands : JSON.parse(JSON.stringify(activeTariffs.peopleBands));
+                            list[idx] = { ...list[idx], pricePerNight: n };
+                            next[season] = { ...(next[season] || {}), peopleBands: list };
+                            setOverrides(next);
+                          }}
+                          className={`flex-1 min-w-0 bg-transparent ${isDarkMode ? 'text-white' : 'text-gray-900'} font-semibold text-base focus:outline-none`}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <button
@@ -868,9 +864,9 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
                     next[season] = { ...(next[season] || {}), peopleBands: list };
                     setOverrides(next);
                   }}
-                  className={`p-3 rounded-lg ${isDarkMode ? 'bg-red-900/30 hover:bg-red-900/50 border-red-800' : 'bg-red-50 hover:bg-red-100 border-red-300'} border-2 transition-colors`}
+                  className={`p-2.5 rounded-xl ${isDarkMode ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600'} transition-all duration-200 opacity-0 group-hover:opacity-100`}
                 >
-                  <Trash2 className={`w-5 h-5 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`} />
+                  <Trash2 className="w-4.5 h-4.5" />
                 </button>
               </div>
             </div>
@@ -885,28 +881,31 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
             next[season] = { ...(next[season] || {}), peopleBands: list };
             setOverrides(next);
           }}
-          className={`w-full mt-4 py-3 rounded-xl border-2 ${colors.border} ${colors.accent} ${colors.text} font-semibold hover:opacity-80 transition-opacity flex items-center justify-center gap-2`}
+          className={`w-full mt-4 py-3 rounded-xl border-2 ${isDarkMode ? 'border-dashed border-slate-600 hover:border-slate-500 hover:bg-slate-800/50' : 'border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50'} ${colors.text} font-medium transition-all duration-200 flex items-center justify-center gap-2`}
         >
-          <Plus className="w-5 h-5" />
-          Agregar tarifa
+          <Plus className="w-4.5 h-4.5" />
+          <span className="text-sm">Agregar tarifa</span>
         </button>
       </div>
 
-      <div className={`${isDarkMode ? 'bg-slate-800' : 'bg-white'} rounded-2xl p-6 shadow-lg border-l-4 ${colors.border} ${isDarkMode ? 'border-t border-r border-b border-slate-700' : 'border-t border-r border-b border-gray-200'}`}>
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-2xl">🎯</span>
-          <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Descuentos por estadía</h3>
+      <div className={`${isDarkMode ? 'bg-slate-800/50' : 'bg-white/80'} backdrop-blur-sm rounded-2xl p-6 shadow-lg border ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200/50'} relative overflow-hidden`}>
+        <div className={`absolute top-0 left-0 w-1 h-full ${colors.primary}`}></div>
+        <div className="flex items-center gap-3 mb-3">
+          <div className={`w-10 h-10 rounded-xl ${colors.accent} flex items-center justify-center`}>
+            <span className="text-xl">🎯</span>
+          </div>
+          <div>
+            <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Descuentos por estadía</h3>
+            <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Descuentos automáticos por noches</p>
+          </div>
         </div>
-        <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} mb-6`}>
-          Configura descuentos automáticos según noches de estadía
-        </p>
 
-        <div className="space-y-4">
+        <div className="space-y-3 mt-5">
           {(overrides[season]?.longStayDiscounts || activeTariffs.longStayDiscounts || []).map((d, idx) => (
-            <div key={idx} className={`p-4 rounded-xl ${isDarkMode ? 'bg-slate-700' : 'bg-gray-50'} border ${isDarkMode ? 'border-slate-600' : 'border-gray-200'}`}>
-              <div className="flex gap-4 items-center">
+            <div key={idx} className={`group p-4 rounded-xl ${isDarkMode ? 'bg-slate-900/50 hover:bg-slate-900/70' : 'bg-gray-50 hover:bg-gray-100'} border ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200'} transition-all duration-200`}>
+              <div className="flex gap-3 items-center">
                 <div className="flex-1">
-                  <label className={`block text-xs font-semibold mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <label className={`block text-xs font-medium mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                     Mín. noches
                   </label>
                   <input
@@ -920,11 +919,11 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
                       next[season] = { ...(next[season] || {}), longStayDiscounts: list };
                       setOverrides(next);
                     }}
-                    className={`w-full px-3 py-2 rounded-lg border ${isDarkMode ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                    className={`w-full px-3 py-2.5 rounded-xl ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-gray-300 text-gray-900'} border-2 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0 ${isDarkMode ? 'focus:ring-slate-600' : 'focus:ring-gray-300'}`}
                   />
                 </div>
                 <div className="flex-1">
-                  <label className={`block text-xs font-semibold mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <label className={`block text-xs font-medium mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                     Descuento %
                   </label>
                   <input
@@ -938,7 +937,7 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
                       next[season] = { ...(next[season] || {}), longStayDiscounts: list };
                       setOverrides(next);
                     }}
-                    className={`w-full px-3 py-2 rounded-lg border ${isDarkMode ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                    className={`w-full px-3 py-2.5 rounded-xl ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-gray-300 text-gray-900'} border-2 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0 ${isDarkMode ? 'focus:ring-slate-600' : 'focus:ring-gray-300'}`}
                   />
                 </div>
                 <button
@@ -949,9 +948,9 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
                     next[season] = { ...(next[season] || {}), longStayDiscounts: list };
                     setOverrides(next);
                   }}
-                  className={`p-3 rounded-lg ${isDarkMode ? 'bg-red-900/30 hover:bg-red-900/50 border-red-800' : 'bg-red-50 hover:bg-red-100 border-red-300'} border-2 transition-colors mt-6`}
+                  className={`p-2.5 rounded-xl ${isDarkMode ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600'} transition-all duration-200 opacity-0 group-hover:opacity-100`}
                 >
-                  <Trash2 className={`w-5 h-5 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`} />
+                  <Trash2 className="w-4.5 h-4.5" />
                 </button>
               </div>
             </div>
@@ -966,19 +965,22 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
             next[season] = { ...(next[season] || {}), longStayDiscounts: list };
             setOverrides(next);
           }}
-          className={`w-full mt-4 py-3 rounded-xl border-2 ${colors.border} ${colors.accent} ${colors.text} font-semibold hover:opacity-80 transition-opacity flex items-center justify-center gap-2`}
+          className={`w-full mt-4 py-3 rounded-xl border-2 ${isDarkMode ? 'border-dashed border-slate-600 hover:border-slate-500 hover:bg-slate-800/50' : 'border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50'} ${colors.text} font-medium transition-all duration-200 flex items-center justify-center gap-2`}
         >
-          <Plus className="w-5 h-5" />
-          Agregar descuento
+          <Plus className="w-4.5 h-4.5" />
+          <span className="text-sm">Agregar descuento</span>
         </button>
       </div>
 
-      <button
-        onClick={() => saveOverrides(overrides)}
-        className={`w-full py-4 rounded-xl ${colors.primary} text-white font-bold text-lg hover:opacity-90 transition-opacity shadow-lg`}
-      >
-        Guardar cambios
-      </button>
+      <div className="sticky bottom-4 z-10">
+        <button
+          onClick={() => saveOverrides(overrides)}
+          className={`w-full py-4 rounded-2xl ${colors.primary} text-white font-bold text-base hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-xl flex items-center justify-center gap-2`}
+        >
+          <Settings className="w-5 h-5" />
+          Guardar cambios
+        </button>
+      </div>
     </div>
   );
 }
