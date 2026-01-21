@@ -677,10 +677,10 @@ function MainScreen({
                   setDiscount(newVal);
                   setManualDiscountEdited(true);
                 }}
-                className={`flex-1 py-2.5 rounded-xl font-semibold transition-all border backdrop-blur-xl ${
+                className={`flex-1 py-2.5 rounded-xl font-semibold transition-all backdrop-blur-xl ${
                   discount === opt.value 
-                    ? `${colors.primary} ${colors.border} text-white shadow-lg` 
-                    : `${isDarkMode ? 'bg-slate-800/20 border-slate-700/30' : 'bg-white/20 border-gray-300/30'} hover:${isDarkMode ? 'bg-slate-800/40' : 'bg-white/40'} ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`
+                    ? `${colors.primary} text-white shadow-lg` 
+                    : `${isDarkMode ? 'bg-slate-800/20 border border-slate-700/30' : 'bg-white/20 border border-gray-300/30'} hover:${isDarkMode ? 'bg-slate-800/40' : 'bg-white/40'} ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`
                 }`}
               >
                 {opt.label}
@@ -696,13 +696,13 @@ function MainScreen({
               <div className="flex gap-2.5 mb-4">
                 <button
                   onClick={() => season === 'summer' ? setSummerPaymentPlan('3') : setAutumnPaymentPlan('3')}
-                  className={`flex-1 py-2.5 rounded-xl font-semibold transition-all border backdrop-blur-xl ${(season === 'summer' ? summerPaymentPlan : autumnPaymentPlan) === '3' ? `${colors.primary} ${colors.border} text-white shadow-lg` : `${isDarkMode ? 'bg-slate-800/20 border-slate-700/30' : 'bg-white/20 border-gray-300/30'} hover:${isDarkMode ? 'bg-slate-800/40' : 'bg-white/40'} ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}`}
+                  className={`flex-1 py-2.5 rounded-xl font-semibold transition-all backdrop-blur-xl ${(season === 'summer' ? summerPaymentPlan : autumnPaymentPlan) === '3' ? `${colors.primary} text-white shadow-lg` : `${isDarkMode ? 'bg-slate-800/20 border border-slate-700/30' : 'bg-white/20 border border-gray-300/30'} hover:${isDarkMode ? 'bg-slate-800/40' : 'bg-white/40'} ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}`}
                 >
                   3 pagos
                 </button>
                 <button
                   onClick={() => season === 'summer' ? setSummerPaymentPlan('2') : setAutumnPaymentPlan('2')}
-                  className={`flex-1 py-2.5 rounded-xl font-semibold transition-all border backdrop-blur-xl ${(season === 'summer' ? summerPaymentPlan : autumnPaymentPlan) === '2' ? `${colors.primary} ${colors.border} text-white shadow-lg` : `${isDarkMode ? 'bg-slate-800/20 border-slate-700/30' : 'bg-white/20 border-gray-300/30'} hover:${isDarkMode ? 'bg-slate-800/40' : 'bg-white/40'} ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}`}
+                  className={`flex-1 py-2.5 rounded-xl font-semibold transition-all backdrop-blur-xl ${(season === 'summer' ? summerPaymentPlan : autumnPaymentPlan) === '2' ? `${colors.primary} text-white shadow-lg` : `${isDarkMode ? 'bg-slate-800/20 border border-slate-700/30' : 'bg-white/20 border border-gray-300/30'} hover:${isDarkMode ? 'bg-slate-800/40' : 'bg-white/40'} ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}`}
                 >
                   2 pagos
                 </button>
@@ -714,13 +714,13 @@ function MainScreen({
             <button
               onClick={onCalculate}
               disabled={!canCalculate}
-              className={`flex-1 py-3 rounded-xl font-bold text-base transition-all backdrop-blur-xl ${canCalculate ? `${colors.primary} text-white shadow-xl` : `${isDarkMode ? 'bg-slate-700/20 text-gray-500' : 'bg-gray-200/20 text-gray-400'} cursor-not-allowed`}`}
+              className={`flex-1 py-3 rounded-xl font-bold text-base transition-all ${canCalculate ? `${colors.primary} text-white shadow-xl` : `${isDarkMode ? 'bg-slate-700/20 text-gray-500' : 'bg-gray-200/20 text-gray-400'} cursor-not-allowed`}`}
             >
               Calcular
             </button>
             <button
               onClick={onClear}
-              className={`flex-1 py-3 rounded-xl font-bold text-base border transition-all backdrop-blur-xl ${isDarkMode ? 'bg-slate-800/20 border-slate-700/30 hover:bg-slate-800/40 text-gray-300' : 'bg-white/20 border-gray-300/30 hover:bg-white/40 text-gray-700'}`}
+              className={`flex-1 py-3 rounded-xl font-bold text-base transition-all backdrop-blur-xl border ${isDarkMode ? 'bg-slate-800/20 border-slate-700/30 hover:bg-slate-800/40 text-gray-300' : 'bg-white/20 border-gray-300/30 hover:bg-white/40 text-gray-700'}`}
             >
               Limpiar
             </button>
@@ -778,7 +778,7 @@ function MainScreen({
             <div className={`backdrop-blur-xl ${isDarkMode ? 'bg-slate-800/20' : 'bg-white/20'} rounded-xl p-3 border ${isDarkMode ? 'border-slate-700/30' : 'border-gray-300/30'}`}>
               <div className="flex justify-between items-center">
                 <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {computed.season === 'summer' ? (computed.summerPaymentPlan === '2' ? 'Segundo pago' : 'Saldo final') : (computed.autumnPaymentPlan === '2' ? 'Segundo pago' : 'Saldo final')}
+                  Saldo final
                 </span>
                 <span className={`text-base font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatARS(computed.saldo)}</span>
               </div>
@@ -789,7 +789,7 @@ function MainScreen({
           <div className="flex gap-3 mt-6 pt-4">
             <button
               onClick={onShare}
-              className={`flex-1 py-3.5 rounded-xl font-bold text-sm transition-all duration-200 backdrop-blur-xl ${isDarkMode ? 'bg-slate-800/20 text-white border-2 border-slate-700/30 hover:bg-slate-800/40' : 'bg-white/20 text-gray-900 border-2 border-gray-300/30 hover:bg-white/40'} flex items-center justify-center gap-2`}
+              className={`flex-1 py-3.5 rounded-xl font-bold text-sm transition-all duration-200 backdrop-blur-xl border-2 ${isDarkMode ? 'bg-slate-800/20 text-white border-slate-700/30 hover:bg-slate-800/40' : 'bg-white/20 text-gray-900 border-gray-300/30 hover:bg-white/40'} flex items-center justify-center gap-2`}
             >
               <ShareNetwork className="w-5 h-5" weight="duotone" />
               Compartir
