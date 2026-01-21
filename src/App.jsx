@@ -211,6 +211,29 @@ function App() {
     }
   }, [season, suggestedStayDiscount, manualDiscountEdited]);
 
+  // Reevaluar descuento al cambiar de estación
+  useEffect(() => {
+    const nights = numberOfNights === '' ? 0 : parseInt(numberOfNights);
+    if (nights > 0 && discount > 0 && activeTariffs) {
+      // Obtener el descuento sugerido para las noches actuales en la nueva estación
+      const newSuggestedDiscount = pickLongStayDiscount(activeTariffs, nights);
+      const currentDiscountPercent = discount * 100;
+      
+      // Si el descuento actual no coincide con ningún descuento válido en la nueva estación, ajustarlo
+      const validDiscounts = activeTariffs.longStayDiscounts?.map(d => d.discount) || [];
+      if (!validDiscounts.includes(currentDiscountPercent)) {
+        // Si hay un descuento sugerido para estas noches, usarlo
+        if (newSuggestedDiscount) {
+          setDiscount(newSuggestedDiscount / 100);
+        } else {
+          // Si no hay descuento sugerido, quitar el descuento
+          setDiscount(0);
+        }
+        setManualDiscountEdited(false);
+      }
+    }
+  }, [season, activeTariffs]);
+
   useEffect(() => {
     const handler = (e) => {
       e.preventDefault();
@@ -619,6 +642,7 @@ function MainScreen({
   onCalculate, onClear, computed, formatARS, onCopyToClipboard, onShare,
   getSummaryText, setFeedbackMessage, resumenRef
 }) {
+  const nightsInputRef = useRef(null);
   return (
     <div className="space-y-6">
       <div className={`${isDarkMode ? 'bg-slate-800' : 'bg-white'} rounded-2xl p-4 shadow-lg border ${colors.border}`}>
@@ -631,7 +655,17 @@ function MainScreen({
               type="number"
               inputMode="numeric"
               value={numberOfPeople}
-              onChange={(e) => setNumberOfPeople(e.target.value)}
+              onChange={(e) => {
+                setNumberOfPeople(e.target.value);
+                // Pasar al siguiente campo después de escribir
+                if (e.target.value.length > 0) {
+                  setTimeout(() => {
+                    if (nightsInputRef.current) {
+                      nightsInputRef.current.focus();
+                    }
+                  }, 500);
+                }
+              }}
               placeholder=""
               className={`w-full px-2 py-3 bg-transparent border-0 border-b-2 ${isDarkMode ? 'border-slate-600 text-white focus:border-slate-400 focus:bg-slate-800/30' : 'border-gray-300 text-gray-900 focus:border-gray-500 focus:bg-gray-50'} focus:outline-none focus:ring-0 text-lg mb-4 transition-all duration-200`}
             />
@@ -642,6 +676,7 @@ function MainScreen({
               Cantidad de noches
             </label>
             <input
+              ref={nightsInputRef}
               type="number"
               inputMode="numeric"
               value={numberOfNights}
