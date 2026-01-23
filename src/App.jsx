@@ -97,8 +97,8 @@ function App() {
   const [numberOfNights, setNumberOfNights] = useState('');
   const [numberOfPeople, setNumberOfPeople] = useState('');
   const [discount, setDiscount] = useState(0);
-  const [summerPaymentPlan, setSummerPaymentPlan] = useState('3');
-  const [autumnPaymentPlan, setAutumnPaymentPlan] = useState('3');
+  const [summerPaymentPlan, setSummerPaymentPlan] = useState('2');
+  const [autumnPaymentPlan, setAutumnPaymentPlan] = useState('2');
   const [computed, setComputed] = useState(null);
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -363,8 +363,8 @@ function App() {
     setNumberOfNights('');
     setNumberOfPeople('');
     setDiscount(0);
-    setSummerPaymentPlan('3');
-    setAutumnPaymentPlan('3');
+    setSummerPaymentPlan('2');
+    setAutumnPaymentPlan('2');
     setComputed(null);
     setManualPriceEdited(false);
     setManualDiscountEdited(false);
@@ -655,7 +655,18 @@ function MainScreen({
   onCalculate, onClear, computed, formatARS, onCopyToClipboard, onShare,
   getSummaryText, setFeedbackMessage, resumenRef
 }) {
+  const peopleInputRef = useRef(null);
   const nightsInputRef = useRef(null);
+
+  const handleClear = () => {
+    onClear();
+    setTimeout(() => {
+      if (peopleInputRef.current) {
+        peopleInputRef.current.focus();
+      }
+    }, 50);
+  };
+
   return (
     <div className="space-y-6">
       <div className={`${isDarkMode ? 'bg-slate-800' : 'bg-white'} rounded-2xl p-4 shadow-lg border ${colors.border}`}>
@@ -665,6 +676,7 @@ function MainScreen({
               Cantidad de huéspedes
             </label>
             <input
+              ref={peopleInputRef}
               type="number"
               inputMode="numeric"
               value={numberOfPeople}
@@ -773,7 +785,7 @@ function MainScreen({
               Calcular
             </button>
             <button
-              onClick={onClear}
+              onClick={handleClear}
               className={`flex-1 py-3 rounded-xl font-bold text-base transition-all backdrop-blur-xl border ${isDarkMode ? 'bg-slate-800/20 border-slate-700/30 hover:bg-slate-800/40 text-gray-300' : 'bg-white/20 border-gray-300/30 hover:bg-white/40 text-gray-700'}`}
             >
               Limpiar
