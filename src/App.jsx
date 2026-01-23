@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, Component, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, Component } from 'react';
 import { Sun, Moon, Gear, Copy, ShareNetwork, X, Trash, Plus, Users, CalendarBlank, CurrencyDollar, Percent, CreditCard, Calculator, Sparkle, Leaf } from '@phosphor-icons/react'
 import tariffsSummer from './data/tariffs.summer.json'
 import tariffsAutumn from './data/tariffs.autumn.json'
@@ -120,15 +120,19 @@ function App() {
   const [touchEnd, setTouchEnd] = useState(null);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const [isSwipeEnabled, setIsSwipeEnabled] = useState(() => {
+    const saved = localStorage.getItem('swipeSeasonToggle');
+    return saved ? saved === 'true' : true;
+  });
   const resumenRef = useRef(null);
 
   const seasonalColors = {
     summer: {
-      primary: isDarkMode ? 'bg-yellow-400' : 'bg-yellow-500',
-      secondary: isDarkMode ? 'bg-yellow-300' : 'bg-yellow-400',
-      accent: isDarkMode ? 'bg-yellow-900/30' : 'bg-yellow-50',
-      border: isDarkMode ? 'border-yellow-600' : 'border-yellow-300',
-      text: isDarkMode ? 'text-yellow-400' : 'text-yellow-600',
+      primary: isDarkMode ? 'bg-sky-400' : 'bg-sky-500',
+      secondary: isDarkMode ? 'bg-sky-300' : 'bg-sky-400',
+      accent: isDarkMode ? 'bg-sky-900/30' : 'bg-sky-50',
+      border: isDarkMode ? 'border-sky-600' : 'border-sky-300',
+      text: isDarkMode ? 'text-sky-300' : 'text-sky-600',
     },
     autumn: {
       primary: isDarkMode ? 'bg-orange-400' : 'bg-orange-500',
@@ -149,6 +153,10 @@ function App() {
       localStorage.setItem('themePreference', 'light');
     }
   }, [isDarkMode]);
+
+  useEffect(() => {
+    localStorage.setItem('swipeSeasonToggle', isSwipeEnabled ? 'true' : 'false');
+  }, [isSwipeEnabled]);
 
   useEffect(() => {
     const base = season === 'autumn' ? tariffsAutumn : tariffsSummer;
@@ -428,17 +436,20 @@ function App() {
   const minSwipeDistance = 50;
 
   const onTouchStart = (e) => {
+    if (!isSwipeEnabled) return;
     if (!e.targetTouches || e.targetTouches.length === 0) return;
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
   };
 
   const onTouchMove = (e) => {
+    if (!isSwipeEnabled) return;
     if (!e.targetTouches || e.targetTouches.length === 0) return;
     setTouchEnd(e.targetTouches[0].clientX);
   };
 
   const onTouchEnd = () => {
+    if (!isSwipeEnabled) return;
     if (!touchStart || !touchEnd) return;
     
     const distance = touchStart - touchEnd;
@@ -452,6 +463,10 @@ function App() {
       setSeason(season === 'autumn' ? 'summer' : 'autumn');
     }
   };
+
+  const swipeHandlers = isSwipeEnabled 
+    ? { onTouchStart, onTouchMove, onTouchEnd }
+    : {};
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
@@ -577,11 +592,7 @@ function App() {
         </div>
 
         {screen === 'main' ? (
-          <div
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
-          >
+          <div {...swipeHandlers}>
           <MainScreen
             isDarkMode={isDarkMode}
             season={season}
@@ -626,6 +637,8 @@ function App() {
             overrides={overrides}
             setOverrides={setOverrides}
             saveOverrides={saveOverrides}
+            isSwipeEnabled={isSwipeEnabled}
+            setIsSwipeEnabled={setIsSwipeEnabled}
           />
         )}
       </div>
@@ -861,7 +874,7 @@ function MainScreen({
 }
 
 
-function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, activeTariffs, overrides, setOverrides, saveOverrides }) {
+function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, activeTariffs, overrides, setOverrides, saveOverrides, isSwipeEnabled, setIsSwipeEnabled }) {
   return (
     <div className="space-y-5">
       <div className={`flex items-center gap-3 mb-6`}>
@@ -880,6 +893,27 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
 
       <div className={`${isDarkMode ? 'bg-slate-800/50' : 'bg-white/80'} backdrop-blur-sm rounded-2xl p-6 shadow-lg border ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200/50'} relative overflow-hidden`}>
         <div className={`absolute top-0 left-0 w-1 h-full ${colors.primary}`}></div>
+        <div className="flex items-center justify-between gap-3 mb-6">
+          <div>
+            <p className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              Cambiar temporada deslizando
+            </p>
+            <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              Activa el gesto para alternar Verano/Otoño con el pulgar
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isSwipeEnabled}
+            onClick={() => setIsSwipeEnabled(prev => !prev)}
+            className={`relative w-14 h-8 rounded-full transition-colors duration-200 ${isSwipeEnabled ? 'bg-sky-500' : isDarkMode ? 'bg-slate-600' : 'bg-gray-300'}`}
+          >
+            <span
+              className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow-sm transform transition-transform duration-200 ${isSwipeEnabled ? 'translate-x-6' : ''}`}
+            />
+          </button>
+        </div>
         <div className="flex items-center gap-3 mb-3">
           <div className={`w-10 h-10 rounded-xl ${colors.accent} flex items-center justify-center`}>
             <Users className="w-5 h-5" weight="duotone" />
