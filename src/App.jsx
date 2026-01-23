@@ -778,17 +778,17 @@ function MainScreen({
 
           <div className="flex gap-3">
             <button
+              onClick={handleClear}
+              className={`flex-1 py-3 rounded-xl font-bold text-base transition-all backdrop-blur-xl border ${isDarkMode ? 'bg-slate-800/20 border-slate-700/30 hover:bg-slate-800/40 text-gray-300' : 'bg-white/20 border-gray-300/30 hover:bg-white/40 text-gray-700'}`}
+            >
+              Limpiar
+            </button>
+            <button
               onClick={onCalculate}
               disabled={!canCalculate}
               className={`flex-1 py-3 rounded-xl font-bold text-base transition-all ${canCalculate ? `${colors.primary} text-white shadow-xl` : `${isDarkMode ? 'bg-slate-700/20 text-gray-500' : 'bg-gray-200/20 text-gray-400'} cursor-not-allowed`}`}
             >
               Calcular
-            </button>
-            <button
-              onClick={handleClear}
-              className={`flex-1 py-3 rounded-xl font-bold text-base transition-all backdrop-blur-xl border ${isDarkMode ? 'bg-slate-800/20 border-slate-700/30 hover:bg-slate-800/40 text-gray-300' : 'bg-white/20 border-gray-300/30 hover:bg-white/40 text-gray-700'}`}
-            >
-              Limpiar
             </button>
           </div>
         </div>

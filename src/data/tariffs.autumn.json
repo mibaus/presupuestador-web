@@ -12,6 +12,6 @@
   ],
   "longStayDiscounts": [
     { "minNights": 2, "discountPercent": 10 },
-    { "minNights": 5, "discountPercent": 15 }
+    { "minNights": 7, "discountPercent": 15 }
   ]
 }
