@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, Component } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, Component } from 'react';
 import { Sun, Moon, Gear, Copy, ShareNetwork, X, Trash, Plus, Users, CalendarBlank, CurrencyDollar, Percent, CreditCard, Calculator, Sparkle, Leaf } from '@phosphor-icons/react'
 import tariffsSummer from './data/tariffs.summer.json'
 import tariffsAutumn from './data/tariffs.autumn.json'
@@ -120,11 +120,13 @@ function App() {
   const [touchEnd, setTouchEnd] = useState(null);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
   const [isSwipeEnabled, setIsSwipeEnabled] = useState(() => {
     const saved = localStorage.getItem('swipeSeasonToggle');
     return saved ? saved === 'true' : true;
   });
   const resumenRef = useRef(null);
+  const waitingServiceWorker = useRef(null);
 
   const seasonalColors = {
     summer: {
@@ -255,6 +257,43 @@ function App() {
     window.addEventListener('beforeinstallprompt', handler);
     
     return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+
+    const monitorInstallingWorker = (worker) => {
+      if (!worker) return;
+      worker.addEventListener('statechange', () => {
+        if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+          waitingServiceWorker.current = worker;
+          setIsUpdateAvailable(true);
+        }
+      });
+    };
+
+    let cleanupUpdateFound = null;
+
+    navigator.serviceWorker.getRegistration().then((registration) => {
+      if (!registration) return;
+      monitorInstallingWorker(registration.installing);
+      const updateFoundHandler = () => monitorInstallingWorker(registration.installing);
+      registration.addEventListener('updatefound', updateFoundHandler);
+      cleanupUpdateFound = () => registration.removeEventListener('updatefound', updateFoundHandler);
+    });
+
+    const onControllerChange = () => {
+      setIsUpdateAvailable(false);
+      waitingServiceWorker.current = null;
+      window.location.reload();
+    };
+
+    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+
+    return () => {
+      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+      if (cleanupUpdateFound) cleanupUpdateFound();
+    };
   }, []);
 
   useEffect(() => {
@@ -468,6 +507,15 @@ function App() {
     ? { onTouchStart, onTouchMove, onTouchEnd }
     : {};
 
+  const handleUpdateNow = useCallback(() => {
+    if (waitingServiceWorker.current) {
+      waitingServiceWorker.current.postMessage({ type: 'SKIP_WAITING' });
+      setFeedbackMessage('Aplicando actualización...');
+    } else {
+      window.location.reload();
+    }
+  }, []);
+
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
     
@@ -498,6 +546,24 @@ function App() {
         {feedbackMessage && (
           <div className={`fixed top-4 right-4 ${isDarkMode ? 'bg-slate-800' : 'bg-white'} px-6 py-3 rounded-lg shadow-lg z-50 border ${isDarkMode ? 'border-slate-700' : 'border-gray-200'}`}>
             <p className={`${isDarkMode ? 'text-white' : 'text-gray-900'} font-medium`}>{feedbackMessage}</p>
+          </div>
+        )}
+
+        {isUpdateAvailable && (
+          <div className={`fixed bottom-4 left-4 right-4 ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'} border rounded-2xl shadow-2xl z-50 p-4 flex flex-col sm:flex-row items-center gap-3`}>
+            <div className="flex items-center gap-2">
+              <Sparkle className={`w-6 h-6 ${isDarkMode ? 'text-sky-300' : 'text-sky-500'}`} weight="duotone" />
+              <div>
+                <p className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Nueva versión disponible</p>
+                <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Actualiza para aplicar los últimos cambios</p>
+              </div>
+            </div>
+            <button
+              onClick={handleUpdateNow}
+              className={`w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-bold ${colors.primary} text-white shadow-md hover:shadow-lg transition-all`}
+            >
+              Actualizar ahora
+            </button>
           </div>
         )}
 

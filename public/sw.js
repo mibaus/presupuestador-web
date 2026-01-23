@@ -1,4 +1,4 @@
-const CACHE_NAME = 'presupuestador-v1';
+const CACHE_NAME = 'presupuestador-v2';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -38,4 +38,10 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
