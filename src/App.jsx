@@ -121,6 +121,7 @@ function App() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const [isSwipeEnabled, setIsSwipeEnabled] = useState(() => {
     const saved = localStorage.getItem('swipeSeasonToggle');
     return saved ? saved === 'true' : true;
@@ -257,6 +258,20 @@ function App() {
     window.addEventListener('beforeinstallprompt', handler);
     
     return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  useEffect(() => {
+    const evaluateDevice = () => {
+      if (typeof window === 'undefined') return;
+      const finePointer = window.matchMedia('(pointer:fine)').matches;
+      const ua = navigator.userAgent.toLowerCase();
+      const isMobileUA = /android|iphone|ipad|ipod/i.test(ua);
+      setIsDesktop(finePointer && !isMobileUA);
+    };
+
+    evaluateDevice();
+    window.addEventListener('resize', evaluateDevice);
+    return () => window.removeEventListener('resize', evaluateDevice);
   }, []);
 
   useEffect(() => {
@@ -409,7 +424,7 @@ function App() {
     setManualDiscountEdited(false);
   };
 
-  const getSummaryText = () => {
+  const getSummaryText = ({ format = 'text' } = {}) => {
     if (!computed) return '';
     
     const formatValue = (valueInCents) => {
@@ -427,18 +442,29 @@ function App() {
     }
     
     const seasonEmoji = computed.season === 'autumn' ? '🍂' : '🏖️';
+    let summary = '';
     
     if (computed.season === 'autumn') {
       if (computed.autumnPaymentPlan === '2') {
-        return `${seasonEmoji} Su Presupuesto\n\n✅ Precio por noche ${formatValue(computed.pricePerNightCents)}\nX ${computed.nights} noche${computed.nights > 1 ? 's' : ''}\n\n${totalSection}\n\n📍1° pago 50% (Seña)\n\n*${formatValue(computed.sena)}*\n\n📍2° pago 50%. Al llegar en efectivo \n\n*${formatValue(computed.saldo)}*\n\n(Por mail enviamos la confirmación de la reserva junto a la factura correspondiente)`;
+        summary = `${seasonEmoji} Su Presupuesto\n\n✅ Precio por noche ${formatValue(computed.pricePerNightCents)}\nX ${computed.nights} noche${computed.nights > 1 ? 's' : ''}\n\n${totalSection}\n\n📍1° pago 50% (Seña)\n\n*${formatValue(computed.sena)}*\n\n📍2° pago 50%. Al llegar en efectivo \n\n*${formatValue(computed.saldo)}*\n\n(Por mail enviamos la confirmación de la reserva junto a la factura correspondiente)`;
+      } else {
+        summary = `${seasonEmoji} Su Presupuesto\n\n✅ Precio por noche ${formatValue(computed.pricePerNightCents)}\nX ${computed.nights} noche${computed.nights > 1 ? 's' : ''}\n\n${totalSection}\n\n📍1° pago 20%\n\n*${formatValue(computed.sena)}*\n\n📍2° pago 30% (Debe abonarse antes de la fecha de ingreso) \n\n*${formatValue(computed.segundo)}*\n\n📍3° pago 50%. Al llegar en efectivo \n\n*${formatValue(computed.saldo)}*\n\n(Por mail enviamos la confirmación de la reserva junto a la factura correspondiente)`;
       }
-      return `${seasonEmoji} Su Presupuesto\n\n✅ Precio por noche ${formatValue(computed.pricePerNightCents)}\nX ${computed.nights} noche${computed.nights > 1 ? 's' : ''}\n\n${totalSection}\n\n📍1° pago 20%\n\n*${formatValue(computed.sena)}*\n\n📍2° pago 30% (Debe abonarse antes de la fecha de ingreso) \n\n*${formatValue(computed.segundo)}*\n\n📍3° pago 50%. Al llegar en efectivo \n\n*${formatValue(computed.saldo)}*\n\n(Por mail enviamos la confirmación de la reserva junto a la factura correspondiente)`;
     } else {
       if (computed.summerPaymentPlan === '2') {
-        return `${seasonEmoji} Su Presupuesto\n\n✅ Precio por noche ${formatValue(computed.pricePerNightCents)}\nX ${computed.nights} noche${computed.nights > 1 ? 's' : ''}\n\n${totalSection}\n\n📍1° pago 50% (Seña)\n\n*${formatValue(computed.sena)}*\n\n📍2° pago 50%. Al llegar en efectivo \n\n*${formatValue(computed.saldo)}*\n\n(Por mail enviamos la confirmación de la reserva junto a la factura correspondiente)`;
+        summary = `${seasonEmoji} Su Presupuesto\n\n✅ Precio por noche ${formatValue(computed.pricePerNightCents)}\nX ${computed.nights} noche${computed.nights > 1 ? 's' : ''}\n\n${totalSection}\n\n📍1° pago 50% (Seña)\n\n*${formatValue(computed.sena)}*\n\n📍2° pago 50%. Al llegar en efectivo \n\n*${formatValue(computed.saldo)}*\n\n(Por mail enviamos la confirmación de la reserva junto a la factura correspondiente)`;
+      } else {
+        summary = `${seasonEmoji} Su Presupuesto\n\n✅ Precio por noche ${formatValue(computed.pricePerNightCents)}\nX ${computed.nights} noche${computed.nights > 1 ? 's' : ''}\n\n${totalSection}\n\n📍1° pago 20%\n\n*${formatValue(computed.sena)}*\n\n📍2° pago 30% (Debe abonarse antes de la fecha de ingreso) \n\n*${formatValue(computed.segundo)}*\n\n📍3° pago 50%. Al llegar en efectivo \n\n*${formatValue(computed.saldo)}*\n\n(Por mail enviamos la confirmación de la reserva junto a la factura correspondiente)`;
       }
-      return `${seasonEmoji} Su Presupuesto\n\n✅ Precio por noche ${formatValue(computed.pricePerNightCents)}\nX ${computed.nights} noche${computed.nights > 1 ? 's' : ''}\n\n${totalSection}\n\n📍1° pago 20%\n\n*${formatValue(computed.sena)}*\n\n📍2° pago 30% (Debe abonarse antes de la fecha de ingreso) \n\n*${formatValue(computed.segundo)}*\n\n📍3° pago 50%. Al llegar en efectivo \n\n*${formatValue(computed.saldo)}*\n\n(Por mail enviamos la confirmación de la reserva junto a la factura correspondiente)`;
     }
+
+    if (format === 'html') {
+      return summary
+        .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br />');
+    }
+
+    return summary;
   };
 
   const onCopyToClipboard = async (value, label) => {
@@ -456,13 +482,25 @@ function App() {
 
   const onShare = async () => {
     try {
-      const text = getSummaryText();
+      const payload = getSummaryText({ format: 'text' });
       if (navigator.share) {
-        await navigator.share({ text });
-      } else {
-        await navigator.clipboard.writeText(text);
-        setFeedbackMessage("Resumen copiado al portapapeles");
+        await navigator.share({ text: payload });
+        return;
       }
+
+      const clipboardItem = isDesktop && navigator.clipboard?.write
+        ? new ClipboardItem({
+            'text/html': new Blob([getSummaryText({ format: 'html' })], { type: 'text/html' }),
+            'text/plain': new Blob([payload], { type: 'text/plain' }),
+          })
+        : null;
+
+      if (clipboardItem && navigator.clipboard.write) {
+        await navigator.clipboard.write([clipboardItem]);
+      } else {
+        await navigator.clipboard.writeText(payload);
+      }
+      setFeedbackMessage("Resumen copiado al portapapeles");
       setTimeout(() => setFeedbackMessage(''), 2000);
     } catch (error) {
       console.error("Error al compartir:", error);
