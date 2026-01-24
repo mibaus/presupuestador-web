@@ -634,8 +634,8 @@ function App() {
         )}
 
         {showMenu && (
-          <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4" onClick={() => setShowMenu(false)}>
-            <div className={`${isDarkMode ? 'bg-slate-800' : 'bg-white'} rounded-2xl p-6 max-w-sm w-full shadow-2xl`} onClick={e => e.stopPropagation()}>
+          <div className="fixed inset-0 bg-black/50 z-40 flex justify-center items-start p-4 pt-8" onClick={() => setShowMenu(false)}>
+            <div className={`${isDarkMode ? 'bg-slate-800' : 'bg-white'} rounded-2xl p-6 w-full max-w-sm shadow-2xl`} onClick={e => e.stopPropagation()}>
               <div className="flex justify-between items-center mb-4">
                 <h3 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Menú</h3>
                 <button onClick={() => setShowMenu(false)} className={`p-2 rounded-lg ${isDarkMode ? 'hover:bg-slate-700' : 'hover:bg-gray-100'}`}>
@@ -652,7 +652,7 @@ function App() {
                 >
                   <Gear className="w-5 h-5" />
                   <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {screen === 'main' ? 'Configuración' : 'Volver al calculador'}
+                    {screen === 'main' ? 'Configuración' : 'Volver al presupuestador'}
                   </span>
                 </button>
                 <button
@@ -1015,7 +1015,7 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
               Cambiar temporada deslizando
             </p>
             <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              Activa el gesto para alternar Verano/Otoño con el pulgar
+              Activa el gesto para alternar la temporada con el pulgar
             </p>
           </div>
           <button
@@ -1023,11 +1023,18 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
             role="switch"
             aria-checked={isSwipeEnabled}
             onClick={() => setIsSwipeEnabled(prev => !prev)}
-            className={`relative w-14 h-8 rounded-full transition-colors duration-200 ${isSwipeEnabled ? 'bg-sky-500' : isDarkMode ? 'bg-slate-600' : 'bg-gray-300'}`}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-semibold tracking-tight transition-all duration-200 ${
+              isSwipeEnabled
+                ? (isDarkMode
+                    ? 'bg-emerald-500/10 border-emerald-400/60 text-emerald-100 shadow-[0_8px_20px_rgba(16,185,129,0.15)]'
+                    : 'bg-emerald-500/10 border-emerald-400 text-emerald-700 shadow-[0_8px_20px_rgba(16,185,129,0.15)]')
+                : (isDarkMode
+                    ? 'bg-slate-800/40 border-slate-700 text-slate-300'
+                    : 'bg-gray-100 border-gray-300 text-gray-600')
+            }`}
           >
-            <span
-              className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow-sm transform transition-transform duration-200 ${isSwipeEnabled ? 'translate-x-6' : ''}`}
-            />
+            <Sparkle className={`w-4 h-4 ${isSwipeEnabled ? 'text-emerald-400' : 'text-gray-400'}`} weight="duotone" />
+            {/* <span>{isSwipeEnabled ? 'Gestos activados' : 'Gestos desactivados'}</span> */}
           </button>
         </div>
         <div className="flex items-center gap-3 mb-3">
@@ -1045,10 +1052,10 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
             <div key={idx} className={`group p-4 rounded-xl ${isDarkMode ? 'bg-slate-900/50 hover:bg-slate-900/70' : 'bg-gray-50 hover:bg-gray-100'} border ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200'} transition-all duration-200`}>
               <div className="flex gap-3 items-start">
                 <div className="flex-1 min-w-0">
-                  <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="grid grid-cols-[1fr_1.4fr] gap-3 mb-3 items-end">
                     <div>
                       <label className={`block text-xs font-medium mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        👤 Personas
+                        Personas
                       </label>
                       <input
                         type="number"
@@ -1061,15 +1068,15 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
                           next[season] = { ...(next[season] || {}), peopleBands: list };
                           setOverrides(next);
                         }}
-                        className={`w-full px-2 py-2.5 bg-transparent border-0 border-b-2 ${isDarkMode ? 'border-slate-600 text-white focus:border-slate-400 focus:bg-slate-800/30' : 'border-gray-300 text-gray-900 focus:border-gray-500 focus:bg-gray-50'} font-bold text-center text-lg ${colors.text} transition-all duration-200 focus:outline-none focus:ring-0`}
+                        className={`w-full px-2 py-2.5 bg-transparent border-0 border-b-2 ${isDarkMode ? 'border-slate-600 text-white focus:border-slate-400 focus:bg-slate-800/30' : 'border-gray-300 text-gray-900 focus:border-gray-500 focus:bg-gray-50'} font-bold text-center text-lg transition-all duration-200 focus:outline-none focus:ring-0`}
                       />
                     </div>
                     <div>
                       <label className={`block text-xs font-medium mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        💰 Precio/Noche
+                        Precio/Noche
                       </label>
-                      <div className={`flex items-center gap-2 px-2 py-2.5 bg-transparent border-0 border-b-2 ${isDarkMode ? 'border-slate-600 focus-within:border-slate-400 focus-within:bg-slate-800/30' : 'border-gray-300 focus-within:border-gray-500 focus-within:bg-gray-50'} transition-all duration-200`}>
-                        <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>$</span>
+                      <div className={`relative w-full`}>
+                        <span className={`absolute left-2 top-1/2 -translate-y-1/2 text-sm font-medium pointer-events-none ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>$</span>
                         <input
                           type="number"
                           value={b.pricePerNight || 0}
@@ -1081,7 +1088,7 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
                             next[season] = { ...(next[season] || {}), peopleBands: list };
                             setOverrides(next);
                           }}
-                          className={`flex-1 min-w-0 bg-transparent ${isDarkMode ? 'text-white' : 'text-gray-900'} font-semibold text-base focus:outline-none`}
+                          className={`w-full px-6 py-2.5 bg-transparent border-0 border-b-2 ${isDarkMode ? 'border-slate-600 text-white focus:border-slate-400 focus:bg-slate-800/30' : 'border-gray-300 text-gray-900 focus:border-gray-500 focus:bg-gray-50'} font-semibold text-center text-lg transition-all duration-200 focus:outline-none focus:ring-0`}
                         />
                       </div>
                     </div>
@@ -1203,7 +1210,7 @@ function AdminScreen({ isDarkMode, season, setSeason, colors, seasonalColors, ac
         </button>
       </div>
 
-      <div className="sticky bottom-4 z-10">
+      <div className="sticky bottom-4 z-10 px-6">
         <button
           onClick={() => saveOverrides(overrides)}
           className={`w-full py-4 rounded-2xl ${colors.primary} text-white font-bold text-base hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-xl flex items-center justify-center gap-2`}
