@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, useRef, useCallback, Component } from 'react';
-import { Sun, Moon, Gear, Copy, ShareNetwork, X, Trash, Plus, Users, CalendarBlank, CurrencyDollar, Percent, CreditCard, Calculator, Sparkle, Leaf } from '@phosphor-icons/react'
+import { Sun, Moon, Gear, Copy, ShareNetwork, X, Trash, Plus, Users, CalendarBlank, CurrencyDollar, Percent, CreditCard, Calculator, Sparkle, Leaf, Snowflake } from '@phosphor-icons/react'
 import tariffsSummer from './data/tariffs.summer.json'
 import tariffsAutumn from './data/tariffs.autumn.json'
+import tariffsWinter from './data/tariffs.winter.json'
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -99,6 +100,7 @@ function App() {
   const [discount, setDiscount] = useState(0);
   const [summerPaymentPlan, setSummerPaymentPlan] = useState('2');
   const [autumnPaymentPlan, setAutumnPaymentPlan] = useState('2');
+  const [winterPaymentPlan, setWinterPaymentPlan] = useState('2');
   const [computed, setComputed] = useState(null);
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -115,7 +117,7 @@ function App() {
   const [manualDiscountEdited, setManualDiscountEdited] = useState(false);
   const [screen, setScreen] = useState('main');
   const [showMenu, setShowMenu] = useState(false);
-  const [overrides, setOverrides] = useState({ summer: null, autumn: null });
+  const [overrides, setOverrides] = useState({ summer: null, autumn: null, winter: null });
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -131,11 +133,11 @@ function App() {
 
   const seasonalColors = {
     summer: {
-      primary: isDarkMode ? 'bg-sky-400' : 'bg-sky-500',
-      secondary: isDarkMode ? 'bg-sky-300' : 'bg-sky-400',
-      accent: isDarkMode ? 'bg-sky-900/30' : 'bg-sky-50',
-      border: isDarkMode ? 'border-sky-600' : 'border-sky-300',
-      text: isDarkMode ? 'text-sky-300' : 'text-sky-600',
+      primary: isDarkMode ? 'bg-[#19d16b]' : 'bg-[#2ee96f]',
+      secondary: isDarkMode ? 'bg-[#14a955]' : 'bg-[#6ff28f]',
+      accent: isDarkMode ? 'bg-[#063a1d]' : 'bg-[#e9fce9]',
+      border: isDarkMode ? 'border-[#1c7a45]' : 'border-[#9cf5bb]',
+      text: isDarkMode ? 'text-[#7cfcc0]' : 'text-[#138a46]',
     },
     autumn: {
       primary: isDarkMode ? 'bg-orange-400' : 'bg-orange-500',
@@ -144,7 +146,16 @@ function App() {
       border: isDarkMode ? 'border-orange-600' : 'border-orange-300',
       text: isDarkMode ? 'text-orange-400' : 'text-orange-600',
     },
+    winter: {
+      primary: isDarkMode ? 'bg-[#0ea5e9]' : 'bg-[#38bdf8]',
+      secondary: isDarkMode ? 'bg-[#38bdf8]' : 'bg-[#7dd3fc]',
+      accent: isDarkMode ? 'bg-[#082f49]' : 'bg-[#e0f2fe]',
+      border: isDarkMode ? 'border-[#0c4a6e]' : 'border-[#bae6fd]',
+      text: isDarkMode ? 'text-[#7dd3fc]' : 'text-[#0369a1]',
+    },
   };
+
+  const seasonOrder = ['summer', 'autumn', 'winter'];
 
   useEffect(() => {
     const root = document.documentElement;
@@ -162,7 +173,7 @@ function App() {
   }, [isSwipeEnabled]);
 
   useEffect(() => {
-    const base = season === 'autumn' ? tariffsAutumn : tariffsSummer;
+    const base = season === 'autumn' ? tariffsAutumn : season === 'winter' ? tariffsWinter : tariffsSummer;
     const ov = overrides?.[season];
     if (ov) {
       const merged = {
@@ -209,7 +220,8 @@ function App() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setOverrides(parsed || { summer: null, autumn: null });
+        const fallback = { summer: null, autumn: null, winter: null };
+        setOverrides({ ...fallback, ...(parsed || {}) });
       } catch (e) {
         console.error('Error loading overrides', e);
       }
@@ -338,7 +350,7 @@ function App() {
       (activeTariffs?.longStayDiscounts || []).map(d => d.discountPercent)
     );
     percents.add(20);
-    if (season === 'summer' || season === 'autumn') {
+    if (['summer', 'autumn', 'winter'].includes(season)) {
       percents.add(10);
       percents.add(15);
     }
@@ -375,6 +387,16 @@ function App() {
           segundo = Math.round(totalWithDiscount * 0.3);
           saldo = totalWithDiscount - sena - segundo;
         }
+      } else if (season === 'winter') {
+        if (winterPaymentPlan === '2') {
+          sena = Math.round(totalWithDiscount * 0.5);
+          segundo = 0;
+          saldo = totalWithDiscount - sena;
+        } else {
+          sena = Math.round(totalWithDiscount * 0.2);
+          segundo = Math.round(totalWithDiscount * 0.3);
+          saldo = totalWithDiscount - sena - segundo;
+        }
       } else {
         if (summerPaymentPlan === '2') {
           sena = Math.round(totalWithDiscount * 0.5);
@@ -397,7 +419,8 @@ function App() {
         pricePerNightCents,
         season,
         summerPaymentPlan,
-        autumnPaymentPlan
+        autumnPaymentPlan,
+        winterPaymentPlan,
       });
 
       // Scroll automático al resumen después de calcular
@@ -419,6 +442,7 @@ function App() {
     setDiscount(0);
     setSummerPaymentPlan('2');
     setAutumnPaymentPlan('2');
+    setWinterPaymentPlan('2');
     setComputed(null);
     setManualPriceEdited(false);
     setManualDiscountEdited(false);
@@ -441,21 +465,18 @@ function App() {
 *Total final: ${formatValue(computed.totalWithDiscount)}*`;
     }
     
-    const seasonEmoji = computed.season === 'autumn' ? '🍂' : '🏖️';
+    const seasonEmoji = computed.season === 'autumn' ? '🍂' : computed.season === 'winter' ? '❄️' : '🏖️';
     let summary = '';
-    
-    if (computed.season === 'autumn') {
-      if (computed.autumnPaymentPlan === '2') {
-        summary = `${seasonEmoji} Su Presupuesto\n\n✅ Precio por noche ${formatValue(computed.pricePerNightCents)}\nX ${computed.nights} noche${computed.nights > 1 ? 's' : ''}\n\n${totalSection}\n\n📍1° pago 50% (Seña)\n\n*${formatValue(computed.sena)}*\n\n📍2° pago 50%. Al llegar en efectivo \n\n*${formatValue(computed.saldo)}*\n\n(Por mail enviamos la confirmación de la reserva junto a la factura correspondiente)`;
-      } else {
-        summary = `${seasonEmoji} Su Presupuesto\n\n✅ Precio por noche ${formatValue(computed.pricePerNightCents)}\nX ${computed.nights} noche${computed.nights > 1 ? 's' : ''}\n\n${totalSection}\n\n📍1° pago 20%\n\n*${formatValue(computed.sena)}*\n\n📍2° pago 30% (Debe abonarse antes de la fecha de ingreso) \n\n*${formatValue(computed.segundo)}*\n\n📍3° pago 50%. Al llegar en efectivo \n\n*${formatValue(computed.saldo)}*\n\n(Por mail enviamos la confirmación de la reserva junto a la factura correspondiente)`;
-      }
+    const plan = computed.season === 'autumn'
+      ? computed.autumnPaymentPlan
+      : computed.season === 'winter'
+        ? computed.winterPaymentPlan
+        : computed.summerPaymentPlan;
+
+    if (plan === '2') {
+      summary = `${seasonEmoji} Su Presupuesto\n\n✅ Precio por noche ${formatValue(computed.pricePerNightCents)}\nX ${computed.nights} noche${computed.nights > 1 ? 's' : ''}\n\n${totalSection}\n\n📍1° pago 50% (Seña)\n\n*${formatValue(computed.sena)}*\n\n📍2° pago 50%. Al llegar en efectivo \n\n*${formatValue(computed.saldo)}*\n\n(Por mail enviamos la confirmación de la reserva junto a la factura correspondiente)`;
     } else {
-      if (computed.summerPaymentPlan === '2') {
-        summary = `${seasonEmoji} Su Presupuesto\n\n✅ Precio por noche ${formatValue(computed.pricePerNightCents)}\nX ${computed.nights} noche${computed.nights > 1 ? 's' : ''}\n\n${totalSection}\n\n📍1° pago 50% (Seña)\n\n*${formatValue(computed.sena)}*\n\n📍2° pago 50%. Al llegar en efectivo \n\n*${formatValue(computed.saldo)}*\n\n(Por mail enviamos la confirmación de la reserva junto a la factura correspondiente)`;
-      } else {
-        summary = `${seasonEmoji} Su Presupuesto\n\n✅ Precio por noche ${formatValue(computed.pricePerNightCents)}\nX ${computed.nights} noche${computed.nights > 1 ? 's' : ''}\n\n${totalSection}\n\n📍1° pago 20%\n\n*${formatValue(computed.sena)}*\n\n📍2° pago 30% (Debe abonarse antes de la fecha de ingreso) \n\n*${formatValue(computed.segundo)}*\n\n📍3° pago 50%. Al llegar en efectivo \n\n*${formatValue(computed.saldo)}*\n\n(Por mail enviamos la confirmación de la reserva junto a la factura correspondiente)`;
-      }
+      summary = `${seasonEmoji} Su Presupuesto\n\n✅ Precio por noche ${formatValue(computed.pricePerNightCents)}\nX ${computed.nights} noche${computed.nights > 1 ? 's' : ''}\n\n${totalSection}\n\n📍1° pago 20%\n\n*${formatValue(computed.sena)}*\n\n📍2° pago 30% (Debe abonarse antes de la fecha de ingreso) \n\n*${formatValue(computed.segundo)}*\n\n📍3° pago 50%. Al llegar en efectivo \n\n*${formatValue(computed.saldo)}*\n\n(Por mail enviamos la confirmación de la reserva junto a la factura correspondiente)`;
     }
 
     if (format === 'html') {
@@ -507,8 +528,8 @@ function App() {
     }
   };
 
-  const seasonEmoji = season === 'summer' ? '🏖️' : '🍂';
-  const colors = seasonalColors[season];
+  const seasonEmoji = season === 'summer' ? '🏖️' : season === 'autumn' ? '🍂' : '❄️';
+  const colors = seasonalColors[season] || seasonalColors.summer;
 
   const minSwipeDistance = 50;
 
@@ -533,11 +554,15 @@ function App() {
     const isLeftSwipe = distance > minSwipeDistance;
     const isRightSwipe = distance < -minSwipeDistance;
     
+    const currentIdx = seasonOrder.indexOf(season);
+    if (currentIdx === -1) return;
     if (isLeftSwipe) {
-      setSeason(season === 'summer' ? 'autumn' : 'summer');
+      const nextIdx = (currentIdx + 1) % seasonOrder.length;
+      setSeason(seasonOrder[nextIdx]);
     }
     if (isRightSwipe) {
-      setSeason(season === 'autumn' ? 'summer' : 'autumn');
+      const prevIdx = (currentIdx - 1 + seasonOrder.length) % seasonOrder.length;
+      setSeason(seasonOrder[prevIdx]);
     }
   };
 
@@ -609,7 +634,13 @@ function App() {
           <div className={`fixed bottom-4 left-4 right-4 ${isDarkMode ? 'bg-gradient-to-r from-slate-800 to-slate-900' : 'bg-gradient-to-r from-white to-gray-50'} p-4 rounded-2xl shadow-2xl z-50 border ${isDarkMode ? 'border-slate-700' : 'border-gray-200'} backdrop-blur-sm`}>
             <div className="flex items-center gap-3">
               <div className={`w-12 h-12 rounded-xl ${colors.primary} flex items-center justify-center flex-shrink-0`}>
-                {season === 'summer' ? <Sun className="w-6 h-6 text-white" weight="duotone" /> : <Leaf className="w-6 h-6 text-white" weight="duotone" />}
+                {season === 'summer' ? (
+                  <Sun className="w-6 h-6 text-white" weight="duotone" />
+                ) : season === 'autumn' ? (
+                  <Leaf className="w-6 h-6 text-white" weight="duotone" />
+                ) : (
+                  <Snowflake className="w-6 h-6 text-white" weight="duotone" />
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className={`font-bold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Instalar aplicación</h3>
@@ -674,18 +705,24 @@ function App() {
 
         <div className="flex justify-between items-center mb-6">
           <div className={`inline-flex gap-1 ${isDarkMode ? 'bg-slate-800/50' : 'bg-gray-100/80'} p-1 rounded-full backdrop-blur-sm`}>
-            <button
-              onClick={() => setSeason('summer')}
-              className={`px-3.5 py-1.5 rounded-full transition-all duration-200 ${season === 'summer' ? `${colors.primary} text-white shadow-md` : `${isDarkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'} scale-95 hover:scale-100`}`}
-            >
-              <Sun className="w-5 h-5" weight="duotone" />
-            </button>
-            <button
-              onClick={() => setSeason('autumn')}
-              className={`px-3.5 py-1.5 rounded-full transition-all duration-200 ${season === 'autumn' ? `${seasonalColors.autumn.primary} text-white shadow-md` : `${isDarkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'} scale-95 hover:scale-100`}`}
-            >
-              <Leaf className="w-5 h-5" weight="duotone" />
-            </button>
+            {[
+              { key: 'summer', icon: <Sun className="w-5 h-5" weight="duotone" /> },
+              { key: 'autumn', icon: <Leaf className="w-5 h-5" weight="duotone" /> },
+              { key: 'winter', icon: <Snowflake className="w-5 h-5" weight="duotone" /> },
+            ].map(({ key, icon }) => {
+              const isActive = season === key;
+              const activeStyles = `${seasonalColors[key].primary} text-white shadow-md`;
+              const idleStyles = `${isDarkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'} scale-95 hover:scale-100`;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setSeason(key)}
+                  className={`px-3.5 py-1.5 rounded-full transition-all duration-200 ${isActive ? activeStyles : idleStyles}`}
+                >
+                  {icon}
+                </button>
+              );
+            })}
           </div>
           <button
             onClick={() => setShowMenu(true)}
@@ -718,6 +755,8 @@ function App() {
             setSummerPaymentPlan={setSummerPaymentPlan}
             autumnPaymentPlan={autumnPaymentPlan}
             setAutumnPaymentPlan={setAutumnPaymentPlan}
+            winterPaymentPlan={winterPaymentPlan}
+            setWinterPaymentPlan={setWinterPaymentPlan}
             canCalculate={canCalculate}
             onCalculate={onCalculate}
             onClear={onClear}
@@ -755,7 +794,8 @@ function MainScreen({
   isDarkMode, season, seasonEmoji, colors, seasonalColors, pricePerNight, setPricePerNight,
   setManualPriceEdited, numberOfNights, setNumberOfNights, numberOfPeople,
   setNumberOfPeople, discount, setDiscount, setManualDiscountEdited,
-  discountOptions, summerPaymentPlan, setSummerPaymentPlan, autumnPaymentPlan, setAutumnPaymentPlan, canCalculate,
+  discountOptions, summerPaymentPlan, setSummerPaymentPlan, autumnPaymentPlan, setAutumnPaymentPlan,
+  winterPaymentPlan, setWinterPaymentPlan, canCalculate,
   onCalculate, onClear, computed, formatARS, onCopyToClipboard, onShare,
   getSummaryText, setFeedbackMessage, resumenRef
 }) {
@@ -858,24 +898,40 @@ function MainScreen({
             ))}
           </div>
 
-          {(season === 'summer' || season === 'autumn') && (
+          {(['summer', 'autumn', 'winter'].includes(season)) && (
             <div>
               <label className={`block text-base mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                 Modalidad de pago
               </label>
               <div className="flex gap-2.5 mb-4">
-                <button
-                  onClick={() => season === 'summer' ? setSummerPaymentPlan('3') : setAutumnPaymentPlan('3')}
-                  className={`flex-1 py-2.5 rounded-xl font-semibold transition-all backdrop-blur-xl ${(season === 'summer' ? summerPaymentPlan : autumnPaymentPlan) === '3' ? `${colors.primary} text-white shadow-lg` : `${isDarkMode ? 'bg-slate-800/20 border border-slate-700/30' : 'bg-white/20 border border-gray-300/30'} hover:${isDarkMode ? 'bg-slate-800/40' : 'bg-white/40'} ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}`}
-                >
-                  3 pagos
-                </button>
-                <button
-                  onClick={() => season === 'summer' ? setSummerPaymentPlan('2') : setAutumnPaymentPlan('2')}
-                  className={`flex-1 py-2.5 rounded-xl font-semibold transition-all backdrop-blur-xl ${(season === 'summer' ? summerPaymentPlan : autumnPaymentPlan) === '2' ? `${colors.primary} text-white shadow-lg` : `${isDarkMode ? 'bg-slate-800/20 border border-slate-700/30' : 'bg-white/20 border border-gray-300/30'} hover:${isDarkMode ? 'bg-slate-800/40' : 'bg-white/40'} ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}`}
-                >
-                  2 pagos
-                </button>
+                {(() => {
+                  const currentPlan = season === 'summer'
+                    ? summerPaymentPlan
+                    : season === 'autumn'
+                      ? autumnPaymentPlan
+                      : winterPaymentPlan;
+                  const setPlan = season === 'summer'
+                    ? setSummerPaymentPlan
+                    : season === 'autumn'
+                      ? setAutumnPaymentPlan
+                      : setWinterPaymentPlan;
+                  return (
+                    <>
+                      <button
+                        onClick={() => setPlan('3')}
+                        className={`flex-1 py-2.5 rounded-xl font-semibold transition-all backdrop-blur-xl ${currentPlan === '3' ? `${colors.primary} text-white shadow-lg` : `${isDarkMode ? 'bg-slate-800/20 border border-slate-700/30' : 'bg-white/20 border border-gray-300/30'} hover:${isDarkMode ? 'bg-slate-800/40' : 'bg-white/40'} ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}`}
+                      >
+                        3 pagos
+                      </button>
+                      <button
+                        onClick={() => setPlan('2')}
+                        className={`flex-1 py-2.5 rounded-xl font-semibold transition-all backdrop-blur-xl ${currentPlan === '2' ? `${colors.primary} text-white shadow-lg` : `${isDarkMode ? 'bg-slate-800/20 border border-slate-700/30' : 'bg-white/20 border border-gray-300/30'} hover:${isDarkMode ? 'bg-slate-800/40' : 'bg-white/40'} ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}`}
+                      >
+                        2 pagos
+                      </button>
+                    </>
+                  );
+                })()}
               </div>
             </div>
           )}

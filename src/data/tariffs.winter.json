@@ -1,0 +1,17 @@
+{
+  "season": "winter",
+  "currency": "ARS",
+  "peopleBands": [
+    { "people": 1, "pricePerNight": 60000 },
+    { "people": 2, "pricePerNight": 110000 },
+    { "people": 3, "pricePerNight": 130000 },
+    { "people": 4, "pricePerNight": 150000 },
+    { "people": 5, "pricePerNight": 170000 },
+    { "people": 6, "pricePerNight": 190000 },
+    { "people": 7, "pricePerNight": 210000 }
+  ],
+  "longStayDiscounts": [
+    { "minNights": 3, "discountPercent": 10 },
+    { "minNights": 7, "discountPercent": 15 }
+  ]
+}

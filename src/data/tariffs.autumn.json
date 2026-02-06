@@ -2,16 +2,16 @@
   "season": "autumn",
   "currency": "ARS",
   "peopleBands": [
-    { "people": 1, "pricePerNight": 45000 },
+    { "people": 1, "pricePerNight": 50000 },
     { "people": 2, "pricePerNight": 85000 },
     { "people": 3, "pricePerNight": 105000 },
-    { "people": 4, "pricePerNight": 130000 },
-    { "people": 5, "pricePerNight": 140000 },
-    { "people": 6, "pricePerNight": 155000 },
-    { "people": 7, "pricePerNight": 170000 }
+    { "people": 4, "pricePerNight": 125000 },
+    { "people": 5, "pricePerNight": 145000 },
+    { "people": 6, "pricePerNight": 165000 },
+    { "people": 7, "pricePerNight": 185000 }
   ],
   "longStayDiscounts": [
-    { "minNights": 2, "discountPercent": 10 },
+    { "minNights": 3, "discountPercent": 10 },
     { "minNights": 7, "discountPercent": 15 }
   ]
 }
