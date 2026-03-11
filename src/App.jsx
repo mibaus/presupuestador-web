@@ -383,14 +383,19 @@ function App() {
       // 1. Subtotal Alojamiento
       const subtotalAlojamiento = pricePerNightCents * nights;
       // 2. Aplicar descuento SOLO al alojamiento
-      const alojamientoConDescuento = Math.round(subtotalAlojamiento * (1 - discount));
+      const discountAmount = Math.round(subtotalAlojamiento * discount);
+      const alojamientoConDescuento = subtotalAlojamiento - discountAmount;
       // 3. Sumar masajes SIN descuento
       const massages = numberOfMassages || 0;
       const totalMasajesCents = massages * massagePriceCents;
       // 4. Total Final
       const totalFinal = alojamientoConDescuento + totalMasajesCents;
-      // 5. Calcular precio por noche distribuido (incluyendo masajes)
-      const distributedPricePerNight = Math.round(totalFinal / nights);
+      // 5. Calcular precio por noche distribuido (incluyendo masajes pero SIN el descuento de larga estadía mostrado aún)
+      // El usuario pidió que el "Precio por noche" arriba sea el original + masajes proporcionales? 
+      // Releyendo: "Precio por noche $85.000 X 7 noches... Total $595.000... Descuento 15%... Total final"
+      // Si hay masajes, el costo debe repartirse en el valor por noche inicial.
+      const priceForNightsWithMassages = subtotalAlojamiento + totalMasajesCents;
+      const distributedPricePerNight = Math.round(priceForNightsWithMassages / nights);
       // ──────────────────────────────────────────────────────────────
 
       const currentPlan = season === 'summer' ? summerPaymentPlan
@@ -410,10 +415,12 @@ function App() {
 
       setComputed({
         subtotalAlojamiento,
+        discountAmount,
         alojamientoConDescuento,
         totalMasajesCents,
         totalFinal,
         distributedPricePerNight,
+        priceForNightsWithMassages,
         // legacy aliases para compatibilidad con código existente
         totalOriginal: subtotalAlojamiento,
         totalWithDiscount: alojamientoConDescuento,
@@ -477,14 +484,18 @@ function App() {
     if (plan === '2') {
       pagosSection = `📍 1° pago 50% (Seña)\n\n*${formatValue(computed.sena)}*\n\n📍 2° pago 50%. Al llegar en efectivo\n\n*${formatValue(computed.saldo)}*`;
     } else {
-      pagosSection = `📍 1° pago 20% (Seña)\n\n*${formatValue(computed.sena)}*\n\n📍 2° pago 30% (Antes del ingreso)\n\n*${formatValue(computed.segundo)}*\n\n📍 3° pago 50%. Al llegar en efectivo\n\n*${formatValue(computed.saldo)}*`;
+      pagosSection = `📍 1° pago 20% (Seña)\n\n*${formatValue(computed.sena)}*\n\n📍 2° pago 30% (Debe abonarse antes de la fecha de ingreso)\n\n*${formatValue(computed.segundo)}*\n\n📍 3° pago 50%. Al llegar en efectivo\n\n*${formatValue(computed.saldo)}*`;
     }
 
     const inclusionText = massages > 0
       ? `\n(Incluye ${massages} sesión${massages > 1 ? 'es' : ''} de masajes)`
       : '';
 
-    const summary = `${seasonEmoji} Su Presupuesto\n\n✅ Precio por noche ${formatValue(computed.distributedPricePerNight)}\nX ${nights} noche${nights > 1 ? 's' : ''}\n\n✅ *Total ${formatValue(computed.totalFinal)}*${inclusionText}\n\n${pagosSection}\n\n(Por mail enviamos la confirmación de la reserva junto a la factura correspondiente)`;
+    const discountLines = computed.discountAmount > 0
+      ? `\n*Descuento ${Math.round(discount * 100)}%: -${formatValue(computed.discountAmount)}*\n*Total final: ${formatValue(computed.totalFinal)}*`
+      : '';
+
+    const summary = `${seasonEmoji} Su Presupuesto\n\n✅ Precio por noche ${formatValue(computed.distributedPricePerNight)}\nX ${nights} noche${nights > 1 ? 's' : ''}\n\n✅ *Total ${formatValue(computed.priceForNightsWithMassages)}*${discountLines}${inclusionText}\n\n${pagosSection}\n\n(Por mail enviamos la confirmación de la reserva junto a la factura correspondiente)`;
 
     if (format === 'html') {
       return summary
