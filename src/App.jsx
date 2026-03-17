@@ -105,6 +105,8 @@ function App() {
   // Masajes — precio interno fijo, nunca visible para el cliente
   const [numberOfMassages, setNumberOfMassages] = useState(0);
   const [massagePriceCents, setMassagePriceCents] = useState(3500000); // $35.000 ARS internos
+  const [hasBasket, setHasBasket] = useState(false);
+  const [basketPriceCents, setBasketPriceCents] = useState(500000); // $5.000 ARS por persona por defecto
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem('themePreference');
@@ -228,6 +230,9 @@ function App() {
         if (parsed?.massagePriceCents) {
           setMassagePriceCents(parsed.massagePriceCents);
         }
+        if (parsed?.basketPriceCents) {
+          setBasketPriceCents(parsed.basketPriceCents);
+        }
       } catch (e) {
         console.error('Error loading overrides', e);
       }
@@ -337,7 +342,7 @@ function App() {
 
   const saveOverrides = (newOverrides) => {
     try {
-      const payload = { ...newOverrides, massagePriceCents };
+      const payload = { ...newOverrides, massagePriceCents, basketPriceCents };
       localStorage.setItem('tariffOverrides', JSON.stringify(payload));
       setOverrides(newOverrides);
       setFeedbackMessage('Cambios guardados');
@@ -385,16 +390,20 @@ function App() {
       // 2. Aplicar descuento SOLO al alojamiento
       const discountAmount = Math.round(subtotalAlojamiento * discount);
       const alojamientoConDescuento = subtotalAlojamiento - discountAmount;
-      // 3. Sumar masajes SIN descuento
+      // 3. Sumar masajes y canastas SIN descuento
       const massages = numberOfMassages || 0;
       const totalMasajesCents = massages * massagePriceCents;
+
+      const people = parseInt(numberOfPeople) || 0;
+      const totalBasketCents = hasBasket ? (people * basketPriceCents) : 0;
+
       // 4. Total Final
-      const totalFinal = alojamientoConDescuento + totalMasajesCents;
-      // 5. Calcular precio por noche distribuido (incluyendo masajes pero SIN el descuento de larga estadía mostrado aún)
-      // El usuario pidió que el "Precio por noche" arriba sea el original + masajes proporcionales? 
+      const totalFinal = alojamientoConDescuento + totalMasajesCents + totalBasketCents;
+      // 5. Calcular precio por noche distribuido (incluyendo masajes y canastas pero SIN el descuento de larga estadía mostrado aún)
+      // El usuario pidió que el "Precio por noche" arriba sea el original + masajes/canastas proporcionales? 
       // Releyendo: "Precio por noche $85.000 X 7 noches... Total $595.000... Descuento 15%... Total final"
-      // Si hay masajes, el costo debe repartirse en el valor por noche inicial.
-      const priceForNightsWithMassages = subtotalAlojamiento + totalMasajesCents;
+      // Si hay extras, el costo debe repartirse en el valor por noche inicial.
+      const priceForNightsWithMassages = subtotalAlojamiento + totalMasajesCents + totalBasketCents;
       const distributedPricePerNight = Math.round(priceForNightsWithMassages / nights);
       // ──────────────────────────────────────────────────────────────
 
@@ -418,6 +427,7 @@ function App() {
         discountAmount,
         alojamientoConDescuento,
         totalMasajesCents,
+        totalBasketCents,
         totalFinal,
         distributedPricePerNight,
         priceForNightsWithMassages,
@@ -429,6 +439,7 @@ function App() {
         saldo,
         nights,
         massages,
+        hasBasket,
         pricePerNightCents,
         season,
         summerPaymentPlan,
@@ -457,6 +468,7 @@ function App() {
     setAutumnPaymentPlan('2');
     setWinterPaymentPlan('2');
     setNumberOfMassages(0);
+    setHasBasket(false);
     setComputed(null);
     setManualPriceEdited(false);
     setManualDiscountEdited(false);
@@ -482,20 +494,25 @@ function App() {
 
     let pagosSection = '';
     if (plan === '2') {
-      pagosSection = `📍 1° pago 50% (Seña)\n\n*${formatValue(computed.sena)}*\n\n📍 2° pago 50%. Al llegar en efectivo\n\n*${formatValue(computed.saldo)}*`;
+      pagosSection = `* Seña con el 50%\n*${formatValue(computed.sena)}*\n\n* Saldo Al llegar en efectivo\n*${formatValue(computed.saldo)}*`;
     } else {
-      pagosSection = `📍 1° pago 20% (Seña)\n\n*${formatValue(computed.sena)}*\n\n📍 2° pago 30% (Debe abonarse antes de la fecha de ingreso)\n\n*${formatValue(computed.segundo)}*\n\n📍 3° pago 50%. Al llegar en efectivo\n\n*${formatValue(computed.saldo)}*`;
+      pagosSection = `* Seña con el 20%\n*${formatValue(computed.sena)}*\n\n* 2° pago 30% antes del ingreso\n*${formatValue(computed.segundo)}*\n\n* Saldo Al llegar en efectivo\n*${formatValue(computed.saldo)}*`;
     }
 
-    const inclusionText = massages > 0
-      ? `\n(Incluye ${massages} sesión${massages > 1 ? 'es' : ''} de masajes)`
-      : '';
+    const inclusionList = [];
+    if (massages > 0) {
+      inclusionList.push(`💆🏻‍♀️ ${massages} sesión${massages > 1 ? 'es' : ''} de masajes`);
+    }
+    // La canasta se menciona siempre según el pedido del usuario
+    inclusionList.push(`🧺 Canasta de bienvenida con productos regionales`);
+
+    const inclusionSection = `\n*Incluye*\n\n${inclusionList.join('\n')}`;
 
     const discountLines = computed.discountAmount > 0
-      ? `\n*Descuento ${Math.round(discount * 100)}%: -${formatValue(computed.discountAmount)}*\n*Total final: ${formatValue(computed.totalFinal)}*`
+      ? `\n*Descuento ${Math.round(discount * 100)}%: -${formatValue(computed.discountAmount)}*\n\n*Total final: ${formatValue(computed.totalFinal)}*`
       : '';
 
-    const summary = `${seasonEmoji} Su Presupuesto\n\n✅ Precio por noche ${formatValue(computed.distributedPricePerNight)}\nX ${nights} noche${nights > 1 ? 's' : ''}\n\n✅ *Total ${formatValue(computed.priceForNightsWithMassages)}*${discountLines}${inclusionText}\n\n${pagosSection}\n\n(Por mail enviamos la confirmación de la reserva junto a la factura correspondiente)`;
+    const summary = `${seasonEmoji} Su Presupuesto\n\n* Precio por noche ${formatValue(computed.distributedPricePerNight)}\n* X ${nights} noche${nights > 1 ? 's' : ''}\n* Total ${formatValue(computed.priceForNightsWithMassages)}\n${discountLines}\n${inclusionSection}\n\n${pagosSection}\n\n(Por mail enviamos la confirmación de la reserva)`;
 
     if (format === 'html') {
       return summary
@@ -787,7 +804,8 @@ function App() {
                 resumenRef={resumenRef}
                 numberOfMassages={numberOfMassages}
                 setNumberOfMassages={setNumberOfMassages}
-                discount={discount}
+                hasBasket={hasBasket}
+                setHasBasket={setHasBasket}
               />
             </div>
           ) : (
@@ -805,6 +823,8 @@ function App() {
               setIsSwipeEnabled={setIsSwipeEnabled}
               massagePriceCents={massagePriceCents}
               setMassagePriceCents={setMassagePriceCents}
+              basketPriceCents={basketPriceCents}
+              setBasketPriceCents={setBasketPriceCents}
             />
           )}
         </div>
@@ -821,7 +841,7 @@ function MainScreen({
   winterPaymentPlan, setWinterPaymentPlan, canCalculate,
   onCalculate, onClear, computed, formatARS, onCopyToClipboard, onShare,
   getSummaryText, setFeedbackMessage, resumenRef,
-  numberOfMassages, setNumberOfMassages
+  numberOfMassages, setNumberOfMassages, hasBasket, setHasBasket
 }) {
   const peopleInputRef = useRef(null);
   const nightsInputRef = useRef(null);
@@ -957,6 +977,28 @@ function MainScreen({
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* Canasta de bienvenida */}
+          <div className="space-y-3">
+            <label className={`block text-base font-medium ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}>Canasta de bienvenida</label>
+            <div className="flex gap-3">
+              {[
+                { val: false, label: 'Sin canasta' },
+                { val: true, label: 'Sumar canasta' }
+              ].map(({ val, label }) => (
+                <button
+                  key={label}
+                  onClick={() => setHasBasket(val)}
+                  className={`flex-1 py-4 rounded-xl text-base font-bold transition-all duration-200 border ${hasBasket === val
+                    ? `border-transparent ${colors.primary} text-white shadow-md`
+                    : (isDarkMode ? 'bg-slate-800/50 border-slate-700/60 text-slate-400' : 'bg-gray-50 border-gray-100 text-gray-500')
+                    }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -1138,8 +1180,9 @@ function MainScreen({
             </button>
           </div>
         </div>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 }
 
@@ -1147,7 +1190,7 @@ function MainScreen({
 function AdminScreen({
   isDarkMode, season, setSeason, colors, seasonalColors, activeTariffs,
   overrides, setOverrides, saveOverrides, isSwipeEnabled, setIsSwipeEnabled,
-  massagePriceCents, setMassagePriceCents
+  massagePriceCents, setMassagePriceCents, basketPriceCents, setBasketPriceCents
 }) {
   return (
     <div className="space-y-5">
@@ -1215,6 +1258,28 @@ function AdminScreen({
               type="number"
               value={Math.round(massagePriceCents / 100)}
               onChange={(e) => setMassagePriceCents(parseInt(e.target.value) * 100 || 0)}
+              className={`w-full pl-7 pr-3 py-2 bg-transparent border-0 border-b-2 ${isDarkMode ? 'border-slate-600 text-white focus:border-slate-400' : 'border-gray-200 text-gray-900 focus:border-gray-400'} font-bold text-right transition-all duration-200 focus:outline-none focus:ring-0`}
+            />
+          </div>
+        </div>
+
+        {/* Valor de canasta */}
+        <div className="flex items-center justify-between gap-3 mb-1">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl ${colors.accent} flex items-center justify-center`}>
+              <Sparkle className="w-5 h-5" weight="duotone" />
+            </div>
+            <div>
+              <h3 className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Valor de canasta</h3>
+              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Precio por persona</p>
+            </div>
+          </div>
+          <div className="relative w-32">
+            <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>$</span>
+            <input
+              type="number"
+              value={Math.round(basketPriceCents / 100)}
+              onChange={(e) => setBasketPriceCents(parseInt(e.target.value) * 100 || 0)}
               className={`w-full pl-7 pr-3 py-2 bg-transparent border-0 border-b-2 ${isDarkMode ? 'border-slate-600 text-white focus:border-slate-400' : 'border-gray-200 text-gray-900 focus:border-gray-400'} font-bold text-right transition-all duration-200 focus:outline-none focus:ring-0`}
             />
           </div>
