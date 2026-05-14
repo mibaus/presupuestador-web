@@ -1,35 +1,31 @@
 {
   "season": "autumn",
   "currency": "ARS",
-  "peopleBands": [
-    {
-      "people": 1,
-      "pricePerNight": 60000
-    },
-    {
-      "people": 2,
-      "pricePerNight": 80000
-    },
-    {
-      "people": 3,
-      "pricePerNight": 95000
-    },
-    {
-      "people": 4,
-      "pricePerNight": 110000
-    },
-    {
-      "people": 5,
-      "pricePerNight": 125000
-    },
-    {
-      "people": 6,
-      "pricePerNight": 140000
-    },
-    {
-      "people": 7,
-      "pricePerNight": 155000
-    }
+  "cabinBands": [
+    { "cabin": 1, "pricePerNight": 130000 },
+    { "cabin": 2, "pricePerNight": 165000 },
+    { "cabin": 3, "pricePerNight": 180000 },
+    { "cabin": 4, "pricePerNight": 130000 },
+    { "cabin": 5, "pricePerNight": 105000 },
+    { "cabin": 6, "pricePerNight": 120000 },
+    { "cabin": 7, "pricePerNight": 155000 },
+    { "cabin": 9, "pricePerNight": 70000 },
+    { "cabin": 10, "pricePerNight": 150000 },
+    { "cabin": 11, "pricePerNight": 200000 },
+    { "cabin": 12, "pricePerNight": 160000 }
+  ],
+  "oneNightCabinBands": [
+    { "cabin": 1, "pricePerNight": 130000 },
+    { "cabin": 2, "pricePerNight": 165000 },
+    { "cabin": 3, "pricePerNight": 180000 },
+    { "cabin": 4, "pricePerNight": 130000 },
+    { "cabin": 5, "pricePerNight": 105000 },
+    { "cabin": 6, "pricePerNight": 120000 },
+    { "cabin": 7, "pricePerNight": 155000 },
+    { "cabin": 9, "pricePerNight": 70000 },
+    { "cabin": 10, "pricePerNight": 150000 },
+    { "cabin": 11, "pricePerNight": 200000 },
+    { "cabin": 12, "pricePerNight": 160000 }
   ],
   "longStayDiscounts": [
     {

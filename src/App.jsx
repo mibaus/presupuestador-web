@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback, Component } from 'react';
-import { Sun, Moon, Gear, Copy, ShareNetwork, X, Trash, Plus, Users, CalendarBlank, CurrencyDollar, Percent, CreditCard, Calculator, Sparkle, Leaf, Snowflake } from '@phosphor-icons/react'
+import { Sun, Moon, Gear, Copy, ShareNetwork, X, Trash, Plus, Users, CalendarBlank, CurrencyDollar, Percent, CreditCard, Calculator, Sparkle, Leaf, Snowflake, CaretDown, Check } from '@phosphor-icons/react'
 import tariffsSummer from './data/tariffs.summer.json'
 import tariffsAutumn from './data/tariffs.autumn.json'
 import tariffsWinter from './data/tariffs.winter.json'
@@ -76,14 +76,12 @@ const parseToCents = (raw) => {
   return Math.round(num * 100);
 };
 
-const pickBandForPeople = (tariffs, people) => {
-  if (!tariffs || !Array.isArray(tariffs.peopleBands)) return null;
-  const bands = [...tariffs.peopleBands].sort((a, b) => a.people - b.people);
-  const exact = bands.find(b => b.people === people);
+const pickBandForCabin = (tariffs, cabin) => {
+  if (!tariffs || !Array.isArray(tariffs.cabinBands)) return null;
+  const bands = [...tariffs.cabinBands].sort((a, b) => a.cabin - b.cabin);
+  const exact = bands.find(b => b.cabin === cabin);
   if (exact) return exact;
-  const higher = bands.find(b => b.people >= people);
-  if (higher) return higher;
-  return bands[bands.length - 1] || null;
+  return null;
 };
 
 const pickLongStayDiscount = (tariffs, nights) => {
@@ -93,10 +91,26 @@ const pickLongStayDiscount = (tariffs, nights) => {
   return match ? match.discountPercent : null;
 };
 
+
+// Puedes editar los textos de las cabañas aquí:
+const AVAILABLE_CABINS = [
+  { id: 1, label: "# 1 El Ombu" },
+  { id: 2, label: "# 2 El Algarrobo" },
+  { id: 3, label: "# 3 El Tala" },
+  { id: 4, label: "# 4 La Mora" },
+  { id: 5, label: "# 5 El Espinillo" },
+  { id: 6, label: "# 6 El Chañar" },
+  { id: 7, label: "# 7 El Moradillo" },
+  { id: 9, label: "# 9 El Alamo" },
+  { id: 10, label: "# 10 El Roble" },
+  { id: 11, label: "# 11 El Quebracho" },
+  { id: 12, label: "# 12 La Acacia" }
+];
+
 function App() {
   const [pricePerNight, setPricePerNight] = useState('');
   const [numberOfNights, setNumberOfNights] = useState('');
-  const [numberOfPeople, setNumberOfPeople] = useState('');
+  const [selectedCabin, setSelectedCabin] = useState('');
   const [discount, setDiscount] = useState(0);
   const [summerPaymentPlan, setSummerPaymentPlan] = useState('2');
   const [autumnPaymentPlan, setAutumnPaymentPlan] = useState('2');
@@ -114,7 +128,7 @@ function App() {
     if (saved === 'light') return false;
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
-  const [season, setSeason] = useState('summer');
+  const [season, setSeason] = useState('autumn');
   const [activeTariffs, setActiveTariffs] = useState(tariffsSummer);
   const [suggestedPriceCents, setSuggestedPriceCents] = useState(0);
   const [manualPriceEdited, setManualPriceEdited] = useState(false);
@@ -160,7 +174,7 @@ function App() {
     },
   };
 
-  const seasonOrder = ['summer', 'autumn', 'winter'];
+  const seasonOrder = ['autumn', 'winter'];
 
   useEffect(() => {
     const root = document.documentElement;
@@ -183,7 +197,8 @@ function App() {
     if (ov) {
       const merged = {
         ...base,
-        peopleBands: Array.isArray(ov.peopleBands) && ov.peopleBands.length > 0 ? ov.peopleBands : base.peopleBands,
+        cabinBands: Array.isArray(ov.cabinBands) && ov.cabinBands.length > 0 ? ov.cabinBands : base.cabinBands,
+        oneNightCabinBands: Array.isArray(ov.oneNightCabinBands) && ov.oneNightCabinBands.length > 0 ? ov.oneNightCabinBands : base.oneNightCabinBands,
         longStayDiscounts: Array.isArray(ov.longStayDiscounts) ? ov.longStayDiscounts : base.longStayDiscounts,
       };
       setActiveTariffs(merged);
@@ -191,17 +206,28 @@ function App() {
       setActiveTariffs(base);
     }
     setManualDiscountEdited(false);
+    if (season === 'autumn') {
+      setHasBasket(false);
+      setNumberOfMassages(0);
+    }
   }, [season, overrides]);
 
   useEffect(() => {
-    const people = numberOfPeople === '' ? 0 : parseInt(numberOfPeople);
+    const people = selectedCabin === '' ? 0 : parseInt(selectedCabin);
+    const nights = numberOfNights === '' ? 0 : parseInt(numberOfNights);
     if (!activeTariffs || !people) {
       setSuggestedPriceCents(0);
       return;
     }
-    const band = pickBandForPeople(activeTariffs, people);
+
+    let bandsToUse = activeTariffs.cabinBands;
+    if (nights === 1 && season === 'autumn' && activeTariffs.oneNightCabinBands) {
+      bandsToUse = activeTariffs.oneNightCabinBands;
+    }
+
+    const band = pickBandForCabin({ ...activeTariffs, cabinBands: bandsToUse }, people);
     setSuggestedPriceCents(band?.pricePerNight ? band.pricePerNight * 100 : 0);
-  }, [activeTariffs, numberOfPeople]);
+  }, [activeTariffs, selectedCabin, numberOfNights, season]);
 
   useEffect(() => {
     if (suggestedPriceCents > 0 && (!manualPriceEdited || !pricePerNight)) {
@@ -372,7 +398,7 @@ function App() {
     return ordered.map(p => ({ label: `${p}%`, value: p / 100 }));
   }, [activeTariffs, season]);
 
-  const canCalculate = parseToCents(pricePerNight) > 0 && parseInt(numberOfNights) > 0 && parseInt(numberOfPeople) > 0;
+  const canCalculate = parseToCents(pricePerNight) > 0 && parseInt(numberOfNights) > 0 && parseInt(selectedCabin) > 0;
 
   const onCalculate = () => {
     try {
@@ -392,10 +418,12 @@ function App() {
       const alojamientoConDescuento = subtotalAlojamiento - discountAmount;
       // 3. Sumar masajes y canastas SIN descuento
       const massages = numberOfMassages || 0;
-      const totalMasajesCents = massages * massagePriceCents;
+      let totalMasajesCents = massages * massagePriceCents;
+      if (season === 'autumn') {
+        totalMasajesCents = Math.round(totalMasajesCents * 0.5);
+      }
 
-      const people = parseInt(numberOfPeople) || 0;
-      const totalBasketCents = hasBasket ? (people * basketPriceCents) : 0;
+      const totalBasketCents = hasBasket ? basketPriceCents : 0;
 
       // 4. Total Final
       const totalFinal = alojamientoConDescuento + totalMasajesCents + totalBasketCents;
@@ -462,7 +490,7 @@ function App() {
   const onClear = () => {
     setPricePerNight('');
     setNumberOfNights('');
-    setNumberOfPeople('');
+    setSelectedCabin('');
     setDiscount(0);
     setSummerPaymentPlan('2');
     setAutumnPaymentPlan('2');
@@ -494,25 +522,30 @@ function App() {
 
     let pagosSection = '';
     if (plan === '2') {
-      pagosSection = `* Seña con el 50%\n*${formatValue(computed.sena)}*\n\n* Saldo Al llegar en efectivo\n*${formatValue(computed.saldo)}*`;
+      pagosSection = `- Seña con el 50%\n*${formatValue(computed.sena)}*\n\n- Saldo Al llegar en efectivo\n*${formatValue(computed.saldo)}*`;
     } else {
-      pagosSection = `* Seña con el 20%\n*${formatValue(computed.sena)}*\n\n* 2° pago 30% antes del ingreso\n*${formatValue(computed.segundo)}*\n\n* Saldo Al llegar en efectivo\n*${formatValue(computed.saldo)}*`;
+      pagosSection = `- Seña con el 20%\n*${formatValue(computed.sena)}*\n\n- 2° pago 30% antes del ingreso\n*${formatValue(computed.segundo)}*\n\n- Saldo Al llegar en efectivo\n*${formatValue(computed.saldo)}*`;
     }
 
     const inclusionList = [];
-    if (massages > 0) {
-      inclusionList.push(`💆🏻‍♀️ ${massages} sesión${massages > 1 ? 'es' : ''} de masajes`);
+    if (computed.season === 'autumn') {
+      inclusionList.push(`💆🏻‍♀️ 2 sesiones de masajes bonificadas +`);
+      if (massages > 0) {
+        inclusionList.push(`💆🏻‍♀️ ${massages} ${massages > 1 ? 'sesiones' : 'sesión'} de masajes con 50% off +`);
+      }
+    } else if (massages > 0) {
+      inclusionList.push(`💆🏻‍♀️ ${massages} ${massages > 1 ? 'sesiones' : 'sesión'} de masajes +`);
     }
     // La canasta se menciona siempre según el pedido del usuario
     inclusionList.push(`🧺 Canasta de bienvenida con productos regionales`);
 
-    const inclusionSection = `\n*Incluye*\n\n${inclusionList.join('\n')}`;
+    const inclusionSection = `*Incluye*\n${inclusionList.join('\n')}`;
 
-    const discountLines = computed.discountAmount > 0
-      ? `\n*Descuento ${Math.round(discount * 100)}%: -${formatValue(computed.discountAmount)}*\n\n*Total final: ${formatValue(computed.totalFinal)}*`
+    const discountText = computed.discountAmount > 0
+      ? ` (${Math.round(discount * 100)}% off aplicado)`
       : '';
 
-    const summary = `${seasonEmoji} Su Presupuesto\n\n* Precio por noche ${formatValue(computed.distributedPricePerNight)}\n* X ${nights} noche${nights > 1 ? 's' : ''}\n* Total ${formatValue(computed.priceForNightsWithMassages)}\n${discountLines}\n${inclusionSection}\n\n${pagosSection}\n\n(Por mail enviamos la confirmación de la reserva)`;
+    const summary = `${seasonEmoji} Su Presupuesto por *${nights} noche${nights > 1 ? 's' : ''}*\n\n*Total final${discountText}: ${formatValue(computed.totalFinal)}*\n\n${inclusionSection}\n\n${pagosSection}\n\n(Una vez acreditada la seña, enviamos por mail la confirmación de la reserva)`;
 
     if (format === 'html') {
       return summary
@@ -741,7 +774,6 @@ function App() {
           <div className="flex justify-between items-center mb-6">
             <div className={`inline-flex gap-1 ${isDarkMode ? 'bg-slate-800/50' : 'bg-gray-100/80'} p-1 rounded-full backdrop-blur-sm`}>
               {[
-                { key: 'summer', icon: <Sun className="w-5 h-5" weight="duotone" /> },
                 { key: 'autumn', icon: <Leaf className="w-5 h-5" weight="duotone" /> },
                 { key: 'winter', icon: <Snowflake className="w-5 h-5" weight="duotone" /> },
               ].map(({ key, icon }) => {
@@ -780,8 +812,8 @@ function App() {
                 setManualPriceEdited={setManualPriceEdited}
                 numberOfNights={numberOfNights}
                 setNumberOfNights={setNumberOfNights}
-                numberOfPeople={numberOfPeople}
-                setNumberOfPeople={setNumberOfPeople}
+                selectedCabin={selectedCabin}
+                setSelectedCabin={setSelectedCabin}
                 discount={discount}
                 setDiscount={setDiscount}
                 setManualDiscountEdited={setManualDiscountEdited}
@@ -835,8 +867,8 @@ function App() {
 
 function MainScreen({
   isDarkMode, season, seasonEmoji, colors, seasonalColors, pricePerNight, setPricePerNight,
-  setManualPriceEdited, numberOfNights, setNumberOfNights, numberOfPeople,
-  setNumberOfPeople, discount, setDiscount, setManualDiscountEdited,
+  setManualPriceEdited, numberOfNights, setNumberOfNights, selectedCabin,
+  setSelectedCabin, discount, setDiscount, setManualDiscountEdited,
   discountOptions, summerPaymentPlan, setSummerPaymentPlan, autumnPaymentPlan, setAutumnPaymentPlan,
   winterPaymentPlan, setWinterPaymentPlan, canCalculate,
   onCalculate, onClear, computed, formatARS, onCopyToClipboard, onShare,
@@ -845,6 +877,7 @@ function MainScreen({
 }) {
   const peopleInputRef = useRef(null);
   const nightsInputRef = useRef(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const handleClear = () => {
     onClear();
@@ -861,22 +894,63 @@ function MainScreen({
       <div className={`rounded-[2rem] shadow-2xl overflow-hidden border ${isDarkMode ? 'border-slate-800 bg-[#1e293b]' : 'border-gray-200 bg-white'} px-6 py-8`}>
         <div className="space-y-8">
 
-          {/* Huéspedes */}
-          <div className="space-y-2">
-            <label className={`block text-base font-medium ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}>Cantidad de huéspedes</label>
-            <input
-              ref={peopleInputRef}
-              type="number"
-              inputMode="numeric"
-              value={numberOfPeople}
-              onChange={(e) => {
-                setNumberOfPeople(e.target.value);
-                if (e.target.value.length > 0) {
-                  setTimeout(() => { if (nightsInputRef.current) nightsInputRef.current.focus(); }, 1500);
-                }
-              }}
-              className={`w-full text-xl font-bold bg-transparent border-0 border-b ${isDarkMode ? 'border-slate-700 text-white' : 'border-gray-200 text-gray-900'} focus:outline-none focus:ring-0 pb-2`}
-            />
+          {/* Cabaña */}
+          <div className="space-y-2 relative">
+            <label className={`block text-base font-medium ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}>Cabaña</label>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className={`w-full flex items-center justify-between text-xl font-bold bg-transparent border-0 border-b ${isDarkMode ? 'border-slate-700 text-white hover:border-slate-500' : 'border-gray-200 text-gray-900 hover:border-gray-300'} focus:outline-none pb-2 transition-colors`}
+              >
+                <span>
+                  {selectedCabin 
+                    ? AVAILABLE_CABINS.find(c => c.id === selectedCabin)?.label || `# ${selectedCabin}`
+                    : 'Selecciona...'}
+                </span>
+                <CaretDown className={`w-5 h-5 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} weight="bold" />
+              </button>
+
+              {/* Dropdown overlay */}
+              {isDropdownOpen && (
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setIsDropdownOpen(false)}
+                />
+              )}
+
+              <div
+                className={`absolute top-full left-0 w-full mt-2 rounded-2xl shadow-2xl overflow-hidden z-50 border transition-all duration-200 origin-top ${isDropdownOpen
+                  ? 'opacity-100 scale-100 translate-y-0'
+                  : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
+                  } ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-100'}`}
+              >
+                <div className="max-h-64 overflow-y-auto py-2 overscroll-contain flex flex-col custom-scrollbar">
+                  {AVAILABLE_CABINS.map(cabin => {
+                    const num = cabin.id;
+                    const isSelected = selectedCabin === num;
+                    return (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCabin(num);
+                          setIsDropdownOpen(false);
+                          setTimeout(() => { if (nightsInputRef.current) nightsInputRef.current.focus(); }, 150);
+                        }}
+                        className={`w-full text-left px-5 py-3.5 flex items-center justify-between transition-colors ${isSelected
+                          ? (isDarkMode ? `bg-slate-700/50 ${colors.text}` : `bg-gray-50 ${colors.text}`)
+                          : (isDarkMode ? 'text-slate-300 hover:bg-slate-700/50' : 'text-gray-700 hover:bg-gray-50')
+                          }`}
+                      >
+                        <span className={`font-medium text-lg ${isSelected ? 'font-bold' : ''}`}>{cabin.label}</span>
+                        {isSelected && <Check className="w-5 h-5" weight="bold" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Noches */}
@@ -981,26 +1055,28 @@ function MainScreen({
           </div>
 
           {/* Canasta de bienvenida */}
-          <div className="space-y-3">
-            <label className={`block text-base font-medium ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}>Canasta de bienvenida</label>
-            <div className="flex gap-3">
-              {[
-                { val: false, label: 'Sin canasta' },
-                { val: true, label: 'Sumar canasta' }
-              ].map(({ val, label }) => (
-                <button
-                  key={label}
-                  onClick={() => setHasBasket(val)}
-                  className={`flex-1 py-4 rounded-xl text-base font-bold transition-all duration-200 border ${hasBasket === val
-                    ? `border-transparent ${colors.primary} text-white shadow-md`
-                    : (isDarkMode ? 'bg-slate-800/50 border-slate-700/60 text-slate-400' : 'bg-gray-50 border-gray-100 text-gray-500')
-                    }`}
-                >
-                  {label}
-                </button>
-              ))}
+          {season !== 'autumn' && (
+            <div className="space-y-3">
+              <label className={`block text-base font-medium ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}>Canasta de bienvenida</label>
+              <div className="flex gap-3">
+                {[
+                  { val: false, label: 'Sin canasta' },
+                  { val: true, label: 'Sumar canasta' }
+                ].map(({ val, label }) => (
+                  <button
+                    key={label}
+                    onClick={() => setHasBasket(val)}
+                    className={`flex-1 py-4 rounded-xl text-base font-bold transition-all duration-200 border ${hasBasket === val
+                      ? `border-transparent ${colors.primary} text-white shadow-md`
+                      : (isDarkMode ? 'bg-slate-800/50 border-slate-700/60 text-slate-400' : 'bg-gray-50 border-gray-100 text-gray-500')
+                      }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Modalidad de pago */}
           {(['summer', 'autumn', 'winter'].includes(season)) && (() => {
@@ -1271,7 +1347,7 @@ function AdminScreen({
             </div>
             <div>
               <h3 className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Valor de canasta</h3>
-              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Precio por persona</p>
+              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Precio por cabaña</p>
             </div>
           </div>
           <div className="relative w-32">
@@ -1293,30 +1369,30 @@ function AdminScreen({
             <Users className="w-5 h-5" weight="duotone" />
           </div>
           <div>
-            <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Tarifas por huéspedes</h3>
+            <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Tarifas por Cabaña</h3>
             <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Precio por noche según capacidad</p>
           </div>
         </div>
 
         <div className="space-y-3 mt-5">
-          {(overrides[season]?.peopleBands || activeTariffs.peopleBands || []).map((b, idx) => (
+          {(overrides[season]?.cabinBands || activeTariffs.cabinBands || []).map((b, idx) => (
             <div key={idx} className={`group p-4 rounded-xl ${isDarkMode ? 'bg-slate-900/50 hover:bg-slate-900/70' : 'bg-gray-50 hover:bg-gray-100'} border ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200'} transition-all duration-200`}>
               <div className="flex gap-3 items-start">
                 <div className="flex-1 min-w-0">
                   <div className="grid grid-cols-[1fr_1.4fr] gap-3 mb-3 items-end">
                     <div>
                       <label className={`block text-xs font-medium mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        Personas
+                        Cabaña
                       </label>
                       <input
                         type="number"
-                        value={b.people}
+                        value={b.cabin}
                         onChange={(e) => {
                           const n = parseInt(e.target.value) || 0;
                           const next = JSON.parse(JSON.stringify(overrides));
-                          const list = next[season]?.peopleBands ? next[season].peopleBands : JSON.parse(JSON.stringify(activeTariffs.peopleBands));
-                          list[idx] = { ...list[idx], people: n };
-                          next[season] = { ...(next[season] || {}), peopleBands: list };
+                          const list = next[season]?.cabinBands ? next[season].cabinBands : JSON.parse(JSON.stringify(activeTariffs.cabinBands));
+                          list[idx] = { ...list[idx], cabin: n };
+                          next[season] = { ...(next[season] || {}), cabinBands: list };
                           setOverrides(next);
                         }}
                         className={`w-full px-2 py-2.5 bg-transparent border-0 border-b-2 ${isDarkMode ? 'border-slate-600 text-white focus:border-slate-400 focus:bg-slate-800/30' : 'border-gray-300 text-gray-900 focus:border-gray-500 focus:bg-gray-50'} font-bold text-center text-lg transition-all duration-200 focus:outline-none focus:ring-0`}
@@ -1334,9 +1410,9 @@ function AdminScreen({
                           onChange={(e) => {
                             const n = parseInt(e.target.value) || 0;
                             const next = JSON.parse(JSON.stringify(overrides));
-                            const list = next[season]?.peopleBands ? next[season].peopleBands : JSON.parse(JSON.stringify(activeTariffs.peopleBands));
+                            const list = next[season]?.cabinBands ? next[season].cabinBands : JSON.parse(JSON.stringify(activeTariffs.cabinBands));
                             list[idx] = { ...list[idx], pricePerNight: n };
-                            next[season] = { ...(next[season] || {}), peopleBands: list };
+                            next[season] = { ...(next[season] || {}), cabinBands: list };
                             setOverrides(next);
                           }}
                           className={`w-full px-6 py-2.5 bg-transparent border-0 border-b-2 ${isDarkMode ? 'border-slate-600 text-white focus:border-slate-400 focus:bg-slate-800/30' : 'border-gray-300 text-gray-900 focus:border-gray-500 focus:bg-gray-50'} font-semibold text-center text-lg transition-all duration-200 focus:outline-none focus:ring-0`}
@@ -1348,9 +1424,9 @@ function AdminScreen({
                 <button
                   onClick={() => {
                     const next = JSON.parse(JSON.stringify(overrides));
-                    const list = next[season]?.peopleBands ? next[season].peopleBands : JSON.parse(JSON.stringify(activeTariffs.peopleBands));
+                    const list = next[season]?.cabinBands ? next[season].cabinBands : JSON.parse(JSON.stringify(activeTariffs.cabinBands));
                     list.splice(idx, 1);
-                    next[season] = { ...(next[season] || {}), peopleBands: list };
+                    next[season] = { ...(next[season] || {}), cabinBands: list };
                     setOverrides(next);
                   }}
                   className={`p-2.5 rounded-xl ${isDarkMode ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600'} transition-all duration-200 opacity-0 group-hover:opacity-100`}
@@ -1365,9 +1441,9 @@ function AdminScreen({
         <button
           onClick={() => {
             const next = JSON.parse(JSON.stringify(overrides));
-            const list = next[season]?.peopleBands ? next[season].peopleBands : JSON.parse(JSON.stringify(activeTariffs.peopleBands));
-            list.push({ people: 1, pricePerNight: 0 });
-            next[season] = { ...(next[season] || {}), peopleBands: list };
+            const list = next[season]?.cabinBands ? next[season].cabinBands : JSON.parse(JSON.stringify(activeTariffs.cabinBands));
+            list.push({ cabin: 1, pricePerNight: 0 });
+            next[season] = { ...(next[season] || {}), cabinBands: list };
             setOverrides(next);
           }}
           className={`w-full mt-4 py-3 rounded-xl border-2 ${isDarkMode ? 'border-dashed border-slate-600 hover:border-slate-500 hover:bg-slate-800/50' : 'border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50'} ${colors.text} font-medium transition-all duration-200 flex items-center justify-center gap-2`}
@@ -1375,6 +1451,101 @@ function AdminScreen({
           <Plus className="w-4.5 h-4.5" weight="bold" />
           <span className="text-sm">Agregar tarifa</span>
         </button>
+
+        {season === 'autumn' && activeTariffs.oneNightCabinBands && (
+          <>
+            {/* Separador */}
+            <div className={`h-px w-full my-6 ${isDarkMode ? 'bg-slate-700/50' : 'bg-gray-100'}`}></div>
+
+            <div className="flex items-center gap-3 mb-3">
+              <div className={`w-10 h-10 rounded-xl ${colors.accent} flex items-center justify-center`}>
+                <Users className="w-5 h-5" weight="duotone" />
+              </div>
+              <div>
+                <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Tarifas por 1 noche</h3>
+                <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Precio especial para estadías de una sola noche</p>
+              </div>
+            </div>
+
+            <div className="space-y-3 mt-5">
+              {(overrides[season]?.oneNightCabinBands || activeTariffs.oneNightCabinBands || []).map((b, idx) => (
+                <div key={idx} className={`group p-4 rounded-xl ${isDarkMode ? 'bg-slate-900/50 hover:bg-slate-900/70' : 'bg-gray-50 hover:bg-gray-100'} border ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200'} transition-all duration-200`}>
+                  <div className="flex gap-3 items-start">
+                    <div className="flex-1 min-w-0">
+                      <div className="grid grid-cols-[1fr_1.4fr] gap-3 mb-3 items-end">
+                        <div>
+                          <label className={`block text-xs font-medium mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            Cabaña
+                          </label>
+                          <input
+                            type="number"
+                            value={b.cabin}
+                            onChange={(e) => {
+                              const n = parseInt(e.target.value) || 0;
+                              const next = JSON.parse(JSON.stringify(overrides));
+                              const list = next[season]?.oneNightCabinBands ? next[season].oneNightCabinBands : JSON.parse(JSON.stringify(activeTariffs.oneNightCabinBands));
+                              list[idx] = { ...list[idx], cabin: n };
+                              next[season] = { ...(next[season] || {}), oneNightCabinBands: list };
+                              setOverrides(next);
+                            }}
+                            className={`w-full px-2 py-2.5 bg-transparent border-0 border-b-2 ${isDarkMode ? 'border-slate-600 text-white focus:border-slate-400 focus:bg-slate-800/30' : 'border-gray-300 text-gray-900 focus:border-gray-500 focus:bg-gray-50'} font-bold text-center text-lg transition-all duration-200 focus:outline-none focus:ring-0`}
+                          />
+                        </div>
+                        <div>
+                          <label className={`block text-xs font-medium mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            Precio/1 Noche
+                          </label>
+                          <div className={`relative w-full`}>
+                            <span className={`absolute left-2 top-1/2 -translate-y-1/2 text-sm font-medium pointer-events-none ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>$</span>
+                            <input
+                              type="number"
+                              value={b.pricePerNight || 0}
+                              onChange={(e) => {
+                                const n = parseInt(e.target.value) || 0;
+                                const next = JSON.parse(JSON.stringify(overrides));
+                                const list = next[season]?.oneNightCabinBands ? next[season].oneNightCabinBands : JSON.parse(JSON.stringify(activeTariffs.oneNightCabinBands));
+                                list[idx] = { ...list[idx], pricePerNight: n };
+                                next[season] = { ...(next[season] || {}), oneNightCabinBands: list };
+                                setOverrides(next);
+                              }}
+                              className={`w-full px-6 py-2.5 bg-transparent border-0 border-b-2 ${isDarkMode ? 'border-slate-600 text-white focus:border-slate-400 focus:bg-slate-800/30' : 'border-gray-300 text-gray-900 focus:border-gray-500 focus:bg-gray-50'} font-semibold text-center text-lg transition-all duration-200 focus:outline-none focus:ring-0`}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const next = JSON.parse(JSON.stringify(overrides));
+                        const list = next[season]?.oneNightCabinBands ? next[season].oneNightCabinBands : JSON.parse(JSON.stringify(activeTariffs.oneNightCabinBands));
+                        list.splice(idx, 1);
+                        next[season] = { ...(next[season] || {}), oneNightCabinBands: list };
+                        setOverrides(next);
+                      }}
+                      className={`p-2.5 rounded-xl ${isDarkMode ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600'} transition-all duration-200 opacity-0 group-hover:opacity-100`}
+                    >
+                      <Trash className="w-4.5 h-4.5" weight="duotone" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => {
+                const next = JSON.parse(JSON.stringify(overrides));
+                const list = next[season]?.oneNightCabinBands ? next[season].oneNightCabinBands : JSON.parse(JSON.stringify(activeTariffs.oneNightCabinBands));
+                list.push({ cabin: 1, pricePerNight: 0 });
+                next[season] = { ...(next[season] || {}), oneNightCabinBands: list };
+                setOverrides(next);
+              }}
+              className={`w-full mt-4 py-3 rounded-xl border-2 ${isDarkMode ? 'border-dashed border-slate-600 hover:border-slate-500 hover:bg-slate-800/50' : 'border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50'} ${colors.text} font-medium transition-all duration-200 flex items-center justify-center gap-2`}
+            >
+              <Plus className="w-4.5 h-4.5" weight="bold" />
+              <span className="text-sm">Agregar tarifa 1 noche</span>
+            </button>
+          </>
+        )}
       </div>
 
       <div className={`${isDarkMode ? 'bg-slate-800/50' : 'bg-white/80'} backdrop-blur-sm rounded-2xl p-6 shadow-lg border ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200/50'} relative overflow-hidden`}>
