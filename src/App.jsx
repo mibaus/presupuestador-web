@@ -536,8 +536,9 @@ function App() {
     } else if (massages > 0) {
       inclusionList.push(`💆🏻‍♀️ ${massages} ${massages > 1 ? 'sesiones' : 'sesión'} de masajes +`);
     }
-    // La canasta se menciona siempre según el pedido del usuario
-    inclusionList.push(`🧺 Canasta de bienvenida con productos regionales`);
+    if (computed.hasBasket) {
+      inclusionList.push(`🧺 Canasta de bienvenida con productos regionales`);
+    }
 
     const inclusionSection = `*Incluye*\n${inclusionList.join('\n')}`;
 
@@ -1055,28 +1056,26 @@ function MainScreen({
           </div>
 
           {/* Canasta de bienvenida */}
-          {season !== 'autumn' && (
-            <div className="space-y-3">
-              <label className={`block text-base font-medium ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}>Canasta de bienvenida</label>
-              <div className="flex gap-3">
-                {[
-                  { val: false, label: 'Sin canasta' },
-                  { val: true, label: 'Sumar canasta' }
-                ].map(({ val, label }) => (
-                  <button
-                    key={label}
-                    onClick={() => setHasBasket(val)}
-                    className={`flex-1 py-4 rounded-xl text-base font-bold transition-all duration-200 border ${hasBasket === val
-                      ? `border-transparent ${colors.primary} text-white shadow-md`
-                      : (isDarkMode ? 'bg-slate-800/50 border-slate-700/60 text-slate-400' : 'bg-gray-50 border-gray-100 text-gray-500')
-                      }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+          <div className="space-y-3">
+            <label className={`block text-base font-medium ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}>Canasta de bienvenida</label>
+            <div className="flex gap-3">
+              {[
+                { val: false, label: 'Sin canasta' },
+                { val: true, label: 'Sumar canasta' }
+              ].map(({ val, label }) => (
+                <button
+                  key={label}
+                  onClick={() => setHasBasket(val)}
+                  className={`flex-1 py-4 rounded-xl text-base font-bold transition-all duration-200 border ${hasBasket === val
+                    ? `border-transparent ${colors.primary} text-white shadow-md`
+                    : (isDarkMode ? 'bg-slate-800/50 border-slate-700/60 text-slate-400' : 'bg-gray-50 border-gray-100 text-gray-500')
+                    }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
-          )}
+          </div>
 
           {/* Modalidad de pago */}
           {(['summer', 'autumn', 'winter'].includes(season)) && (() => {
