@@ -119,7 +119,7 @@ function App() {
   // Masajes — precio interno fijo, nunca visible para el cliente
   const [numberOfMassages, setNumberOfMassages] = useState(0);
   const [massagePriceCents, setMassagePriceCents] = useState(3500000); // $35.000 ARS internos
-  const [hasBasket, setHasBasket] = useState(false);
+  const [numberOfBaskets, setNumberOfBaskets] = useState(0);
   const [basketPriceCents, setBasketPriceCents] = useState(500000); // $5.000 ARS por persona por defecto
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -207,7 +207,7 @@ function App() {
     }
     setManualDiscountEdited(false);
     if (season === 'autumn') {
-      setHasBasket(false);
+      setNumberOfBaskets(0);
       setNumberOfMassages(0);
     }
   }, [season, overrides]);
@@ -423,7 +423,8 @@ function App() {
         totalMasajesCents = Math.round(totalMasajesCents * 0.5);
       }
 
-      const totalBasketCents = hasBasket ? basketPriceCents : 0;
+      const baskets = numberOfBaskets || 0;
+      const totalBasketCents = baskets * basketPriceCents;
 
       // 4. Total Final
       const totalFinal = alojamientoConDescuento + totalMasajesCents + totalBasketCents;
@@ -467,7 +468,7 @@ function App() {
         saldo,
         nights,
         massages,
-        hasBasket,
+        baskets,
         pricePerNightCents,
         season,
         summerPaymentPlan,
@@ -496,7 +497,7 @@ function App() {
     setAutumnPaymentPlan('2');
     setWinterPaymentPlan('2');
     setNumberOfMassages(0);
-    setHasBasket(false);
+    setNumberOfBaskets(0);
     setComputed(null);
     setManualPriceEdited(false);
     setManualDiscountEdited(false);
@@ -528,25 +529,26 @@ function App() {
     }
 
     const inclusionList = [];
-    if (computed.season === 'autumn') {
-      inclusionList.push(`💆🏻‍♀️ 2 sesiones de masajes bonificadas +`);
-      if (massages > 0) {
+    if (massages > 0) {
+      if (computed.season === 'autumn') {
         inclusionList.push(`💆🏻‍♀️ ${massages} ${massages > 1 ? 'sesiones' : 'sesión'} de masajes con 50% off +`);
+      } else {
+        inclusionList.push(`💆🏻‍♀️ ${massages} ${massages > 1 ? 'sesiones' : 'sesión'} de masajes +`);
       }
-    } else if (massages > 0) {
-      inclusionList.push(`💆🏻‍♀️ ${massages} ${massages > 1 ? 'sesiones' : 'sesión'} de masajes +`);
     }
-    if (computed.hasBasket) {
+    if (computed.baskets > 0) {
       inclusionList.push(`🧺 Canasta de bienvenida con productos regionales`);
     }
 
-    const inclusionSection = `*Incluye*\n${inclusionList.join('\n')}`;
+    const inclusionSection = inclusionList.length > 0
+      ? `*Incluye*\n${inclusionList.join('\n')}\n\n`
+      : '';
 
     const discountText = computed.discountAmount > 0
       ? ` (${Math.round(discount * 100)}% off aplicado)`
       : '';
 
-    const summary = `${seasonEmoji} Su Presupuesto por *${nights} noche${nights > 1 ? 's' : ''}*\n\n*Total final${discountText}: ${formatValue(computed.totalFinal)}*\n\n${inclusionSection}\n\n${pagosSection}\n\n(Una vez acreditada la seña, enviamos por mail la confirmación de la reserva)`;
+    const summary = `${seasonEmoji} Su Presupuesto por *${nights} noche${nights > 1 ? 's' : ''}*\n\n*Total final${discountText}: ${formatValue(computed.totalFinal)}*\n\n${inclusionSection}${pagosSection}\n\n(Una vez acreditada la seña, enviamos por mail la confirmación de la reserva)`;
 
     if (format === 'html') {
       return summary
@@ -837,8 +839,8 @@ function App() {
                 resumenRef={resumenRef}
                 numberOfMassages={numberOfMassages}
                 setNumberOfMassages={setNumberOfMassages}
-                hasBasket={hasBasket}
-                setHasBasket={setHasBasket}
+                numberOfBaskets={numberOfBaskets}
+                setNumberOfBaskets={setNumberOfBaskets}
               />
             </div>
           ) : (
@@ -874,7 +876,7 @@ function MainScreen({
   winterPaymentPlan, setWinterPaymentPlan, canCalculate,
   onCalculate, onClear, computed, formatARS, onCopyToClipboard, onShare,
   getSummaryText, setFeedbackMessage, resumenRef,
-  numberOfMassages, setNumberOfMassages, hasBasket, setHasBasket
+  numberOfMassages, setNumberOfMassages, numberOfBaskets, setNumberOfBaskets
 }) {
   const peopleInputRef = useRef(null);
   const nightsInputRef = useRef(null);
@@ -1007,73 +1009,78 @@ function MainScreen({
           {/* Masajes - Stepper UX */}
           <div className="space-y-3">
             <label className={`block text-base font-medium ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}>Masajes</label>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setNumberOfMassages(0)}
-                className={`flex-1 py-4 rounded-xl text-base font-bold transition-all duration-200 border ${numberOfMassages === 0
-                  ? `border-transparent ${colors.primary} text-white shadow-md`
-                  : (isDarkMode ? 'bg-slate-800/50 border-slate-700/60 text-slate-400' : 'bg-gray-50 border-gray-100 text-gray-500')
-                  }`}
-              >
-                Sin masajes
-              </button>
-
-              <div className={`flex-[1.4] flex rounded-xl border overflow-hidden transition-all duration-200 ${numberOfMassages > 0
-                ? `border-transparent ${colors.primary} shadow-md`
-                : (isDarkMode ? 'bg-slate-800/50 border-slate-700/60' : 'bg-gray-50 border-gray-100')
-                }`}>
-                {numberOfMassages === 0 ? (
+            <div className={`w-full flex rounded-xl border overflow-hidden transition-all duration-200 ${numberOfMassages > 0
+              ? `border-transparent ${colors.primary} shadow-md`
+              : (isDarkMode ? 'bg-slate-800/50 border-slate-700/60' : 'bg-gray-50 border-gray-100')
+              }`}>
+              {numberOfMassages === 0 ? (
+                <button
+                  onClick={() => setNumberOfMassages(1)}
+                  className={`w-full py-4 text-base font-bold transition-colors ${isDarkMode ? 'text-slate-400 hover:bg-slate-800' : 'text-gray-500 hover:bg-gray-100'}`}
+                >
+                  Desactivado
+                </button>
+              ) : (
+                <div className="flex items-center w-full h-14">
                   <button
-                    onClick={() => setNumberOfMassages(1)}
-                    className={`w-full py-4 text-base font-bold transition-colors ${isDarkMode ? 'text-slate-400 hover:bg-slate-800' : 'text-gray-500 hover:bg-gray-100'}`}
+                    onClick={() => setNumberOfMassages(prev => Math.max(0, prev - 1))}
+                    className="w-16 h-full flex items-center justify-center text-white text-3xl font-light hover:bg-black/10 active:scale-90 transition-all border-none outline-none"
                   >
-                    Sumar masajes
+                    −
                   </button>
-                ) : (
-                  <div className="flex items-center w-full h-full">
-                    <button
-                      onClick={() => setNumberOfMassages(prev => Math.max(0, prev - 1))}
-                      className="w-12 h-12 flex items-center justify-center text-white text-2xl font-light hover:bg-black/10 active:scale-90 transition-all border-none outline-none"
-                    >
-                      −
-                    </button>
-                    <div className="flex-1 flex flex-col items-center justify-center leading-none select-none">
-                      <span className="text-white font-black text-lg">{numberOfMassages}</span>
-                      <span className="text-[9px] text-white/80 font-bold uppercase tracking-tighter">
-                        {numberOfMassages === 1 ? 'masaje' : 'masajes'}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => setNumberOfMassages(prev => prev + 1)}
-                      className="w-12 h-12 flex items-center justify-center text-white text-2xl font-light hover:bg-black/10 active:scale-90 transition-all border-none outline-none"
-                    >
-                      +
-                    </button>
+                  <div className="flex-1 flex flex-col items-center justify-center leading-none select-none">
+                    <span className="text-white font-black text-xl">{numberOfMassages}</span>
+                    <span className="text-[10px] text-white/80 font-bold uppercase tracking-tighter mt-0.5">
+                      {numberOfMassages === 1 ? 'masaje' : 'masajes'}
+                    </span>
                   </div>
-                )}
-              </div>
+                  <button
+                    onClick={() => setNumberOfMassages(prev => prev + 1)}
+                    className="w-16 h-full flex items-center justify-center text-white text-3xl font-light hover:bg-black/10 active:scale-90 transition-all border-none outline-none"
+                  >
+                    +
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Canasta de bienvenida */}
           <div className="space-y-3">
             <label className={`block text-base font-medium ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}>Canasta de bienvenida</label>
-            <div className="flex gap-3">
-              {[
-                { val: false, label: 'Sin canasta' },
-                { val: true, label: 'Sumar canasta' }
-              ].map(({ val, label }) => (
+            <div className={`w-full flex rounded-xl border overflow-hidden transition-all duration-200 ${numberOfBaskets > 0
+              ? `border-transparent ${colors.primary} shadow-md`
+              : (isDarkMode ? 'bg-slate-800/50 border-slate-700/60' : 'bg-gray-50 border-gray-100')
+              }`}>
+              {numberOfBaskets === 0 ? (
                 <button
-                  key={label}
-                  onClick={() => setHasBasket(val)}
-                  className={`flex-1 py-4 rounded-xl text-base font-bold transition-all duration-200 border ${hasBasket === val
-                    ? `border-transparent ${colors.primary} text-white shadow-md`
-                    : (isDarkMode ? 'bg-slate-800/50 border-slate-700/60 text-slate-400' : 'bg-gray-50 border-gray-100 text-gray-500')
-                    }`}
+                  onClick={() => setNumberOfBaskets(1)}
+                  className={`w-full py-4 text-base font-bold transition-colors ${isDarkMode ? 'text-slate-400 hover:bg-slate-800' : 'text-gray-500 hover:bg-gray-100'}`}
                 >
-                  {label}
+                  Desactivado
                 </button>
-              ))}
+              ) : (
+                <div className="flex items-center w-full h-14">
+                  <button
+                    onClick={() => setNumberOfBaskets(prev => Math.max(0, prev - 1))}
+                    className="w-16 h-full flex items-center justify-center text-white text-3xl font-light hover:bg-black/10 active:scale-90 transition-all border-none outline-none"
+                  >
+                    −
+                  </button>
+                  <div className="flex-1 flex flex-col items-center justify-center leading-none select-none">
+                    <span className="text-white font-black text-xl">{numberOfBaskets}</span>
+                    <span className="text-[10px] text-white/80 font-bold uppercase tracking-tighter mt-0.5">
+                      {numberOfBaskets === 1 ? 'canasta' : 'canastas'}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setNumberOfBaskets(prev => prev + 1)}
+                    className="w-16 h-full flex items-center justify-center text-white text-3xl font-light hover:bg-black/10 active:scale-90 transition-all border-none outline-none"
+                  >
+                    +
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1152,25 +1159,73 @@ function MainScreen({
             </div>
 
             {/* Desglose interno — visible solo para el operador */}
-            <div className={`mx-5 mb-4 ml-6 rounded-xl px-3.5 py-3 space-y-2 ${isDarkMode ? 'bg-slate-900/50' : 'bg-gray-50'
+            <div className={`mx-5 mb-4 ml-6 rounded-xl px-3.5 py-3 space-y-1.5 ${isDarkMode ? 'bg-slate-900/50' : 'bg-gray-50'
               }`}>
               <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${isDarkMode ? 'text-slate-500' : 'text-gray-400'
                 }`}>Detalle interno</p>
 
+              {/* Alojamiento base */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-sm">🏠</span>
-                  <div>
+                  <p className={`text-xs font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Aloj. {formatARS(computed.pricePerNightCents)} × {computed.nights} noche{computed.nights > 1 ? 's' : ''}
+                  </p>
+                </div>
+                <span className={`text-xs tabular-nums ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {formatARS(computed.subtotalAlojamiento)}
+                </span>
+              </div>
+
+              {/* Descuento de alojamiento */}
+              {computed.discountAmount > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">🏷️</span>
                     <p className={`text-xs font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                      Alojamiento {computed.massages > 0 && '(con masajes)'}
-                    </p>
-                    <p className={`text-[10px] ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>
-                      {formatARS(computed.distributedPricePerNight)} × {computed.nights} noche{computed.nights > 1 ? 's' : ''}
-                      {discount > 0 && computed.massages === 0 && ` − ${discount * 100}%`}
+                      Descuento larga estadía ({computed.discountAmount > 0 ? Math.round(computed.discountAmount / computed.subtotalAlojamiento * 100) : 0}%)
                     </p>
                   </div>
+                  <span className={`text-xs tabular-nums ${isDarkMode ? 'text-red-400' : 'text-red-500'}`}>
+                    −{formatARS(computed.discountAmount)}
+                  </span>
                 </div>
-                <span className={`text-xs font-bold tabular-nums ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+              )}
+
+              {/* Masajes */}
+              {computed.massages > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">💆🏻‍♀️</span>
+                    <p className={`text-xs font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      {computed.massages} masaje{computed.massages > 1 ? 's' : ''}
+                    </p>
+                  </div>
+                  <span className={`text-xs tabular-nums ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {formatARS(computed.totalMasajesCents)}
+                  </span>
+                </div>
+              )}
+
+              {/* Canasta */}
+              {computed.baskets > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">🧺</span>
+                    <p className={`text-xs font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      {computed.baskets} canasta{computed.baskets > 1 ? 's' : ''} de bienvenida
+                    </p>
+                  </div>
+                  <span className={`text-xs tabular-nums ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {formatARS(computed.totalBasketCents)}
+                  </span>
+                </div>
+              )}
+
+              {/* Separador y Total */}
+              <div className={`pt-1.5 mt-1 border-t ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200'} flex items-center justify-between`}>
+                <p className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Total</p>
+                <span className={`text-xs font-black tabular-nums ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                   {formatARS(computed.totalFinal)}
                 </span>
               </div>
@@ -1346,7 +1401,7 @@ function AdminScreen({
             </div>
             <div>
               <h3 className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Valor de canasta</h3>
-              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Precio por cabaña</p>
+              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Precio por unidad</p>
             </div>
           </div>
           <div className="relative w-32">
