@@ -1025,82 +1025,87 @@ function MainScreen({
             ))}
           </div>
 
-          {/* Masajes - Stepper UX */}
-          <div className="space-y-3">
-            <label className={`block text-base font-medium ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}>Masajes</label>
-            <div className={`w-full flex rounded-xl border overflow-hidden transition-all duration-200 ${numberOfMassages > 0
-              ? `border-transparent ${colors.primary} shadow-md`
-              : (isDarkMode ? 'bg-slate-800/50 border-slate-700/60' : 'bg-gray-50 border-gray-100')
-              }`}>
-              {numberOfMassages === 0 ? (
-                <button
-                  onClick={() => setNumberOfMassages(1)}
-                  className={`w-full py-4 text-base font-bold transition-colors ${isDarkMode ? 'text-slate-400 hover:bg-slate-800' : 'text-gray-500 hover:bg-gray-100'}`}
-                >
-                  Desactivado
-                </button>
-              ) : (
-                <div className="flex items-center w-full h-14">
-                  <button
-                    onClick={() => setNumberOfMassages(prev => Math.max(0, prev - 1))}
-                    className="w-16 h-full flex items-center justify-center text-white text-3xl font-light hover:bg-black/10 active:scale-90 transition-all border-none outline-none"
-                  >
-                    −
-                  </button>
-                  <div className="flex-1 flex flex-col items-center justify-center leading-none select-none">
-                    <span className="text-white font-black text-xl">{numberOfMassages}</span>
-                    <span className="text-[10px] text-white/80 font-bold uppercase tracking-tighter mt-0.5">
-                      {numberOfMassages === 1 ? 'masaje' : 'masajes'}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => setNumberOfMassages(prev => prev + 1)}
-                    className="w-16 h-full flex items-center justify-center text-white text-3xl font-light hover:bg-black/10 active:scale-90 transition-all border-none outline-none"
-                  >
-                    +
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Masajes + Canasta en una misma línea */}
+          <div className="grid grid-cols-2 gap-3">
 
-          {/* Canasta de bienvenida */}
-          <div className="space-y-3">
-            <label className={`block text-base font-medium ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}>Canasta de bienvenida</label>
-            <div className={`w-full flex rounded-xl border overflow-hidden transition-all duration-200 ${numberOfBaskets > 0
-              ? `border-transparent ${colors.primary} shadow-md`
-              : (isDarkMode ? 'bg-slate-800/50 border-slate-700/60' : 'bg-gray-50 border-gray-100')
-              }`}>
-              {numberOfBaskets === 0 ? (
-                <button
-                  onClick={() => setNumberOfBaskets(1)}
-                  className={`w-full py-4 text-base font-bold transition-colors ${isDarkMode ? 'text-slate-400 hover:bg-slate-800' : 'text-gray-500 hover:bg-gray-100'}`}
-                >
-                  Desactivado
-                </button>
-              ) : (
-                <div className="flex items-center w-full h-14">
+            {/* Masajes */}
+            <div className="space-y-2">
+              <label className={`block text-sm font-medium ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}>Masajes</label>
+              <div className={`w-full flex rounded-xl border overflow-hidden transition-all duration-200 ${numberOfMassages > 0
+                ? `border-transparent ${colors.primary} shadow-md`
+                : (isDarkMode ? 'bg-slate-800/50 border-slate-700/60' : 'bg-gray-50 border-gray-100')
+                }`}>
+                {numberOfMassages === 0 ? (
                   <button
-                    onClick={() => setNumberOfBaskets(prev => Math.max(0, prev - 1))}
-                    className="w-16 h-full flex items-center justify-center text-white text-3xl font-light hover:bg-black/10 active:scale-90 transition-all border-none outline-none"
+                    onClick={() => setNumberOfMassages(1)}
+                    className={`w-full py-4 text-sm font-bold transition-colors ${isDarkMode ? 'text-slate-400 hover:bg-slate-800' : 'text-gray-500 hover:bg-gray-100'}`}
                   >
-                    −
+                    —
                   </button>
-                  <div className="flex-1 flex flex-col items-center justify-center leading-none select-none">
-                    <span className="text-white font-black text-xl">{numberOfBaskets}</span>
-                    <span className="text-[10px] text-white/80 font-bold uppercase tracking-tighter mt-0.5">
-                      {numberOfBaskets === 1 ? 'canasta' : 'canastas'}
-                    </span>
+                ) : (
+                  <div className="flex items-center w-full h-14">
+                    <button
+                      onClick={() => setNumberOfMassages(prev => Math.max(0, prev - 1))}
+                      className="w-10 h-full flex items-center justify-center text-white text-2xl font-light hover:bg-black/10 active:scale-90 transition-all border-none outline-none"
+                    >
+                      −
+                    </button>
+                    <div className="flex-1 flex flex-col items-center justify-center leading-none select-none">
+                      <span className="text-white font-black text-xl">{numberOfMassages}</span>
+                      <span className="text-[9px] text-white/80 font-bold uppercase tracking-tighter mt-0.5">
+                        {numberOfMassages === 1 ? 'masaje' : 'masajes'}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setNumberOfMassages(prev => prev + 1)}
+                      className="w-10 h-full flex items-center justify-center text-white text-2xl font-light hover:bg-black/10 active:scale-90 transition-all border-none outline-none"
+                    >
+                      +
+                    </button>
                   </div>
-                  <button
-                    onClick={() => setNumberOfBaskets(prev => prev + 1)}
-                    className="w-16 h-full flex items-center justify-center text-white text-3xl font-light hover:bg-black/10 active:scale-90 transition-all border-none outline-none"
-                  >
-                    +
-                  </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
+
+            {/* Canasta */}
+            <div className="space-y-2">
+              <label className={`block text-sm font-medium ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}>Canasta</label>
+              <div className={`w-full flex rounded-xl border overflow-hidden transition-all duration-200 ${numberOfBaskets > 0
+                ? `border-transparent ${colors.primary} shadow-md`
+                : (isDarkMode ? 'bg-slate-800/50 border-slate-700/60' : 'bg-gray-50 border-gray-100')
+                }`}>
+                {numberOfBaskets === 0 ? (
+                  <button
+                    onClick={() => setNumberOfBaskets(1)}
+                    className={`w-full py-4 text-sm font-bold transition-colors ${isDarkMode ? 'text-slate-400 hover:bg-slate-800' : 'text-gray-500 hover:bg-gray-100'}`}
+                  >
+                    —
+                  </button>
+                ) : (
+                  <div className="flex items-center w-full h-14">
+                    <button
+                      onClick={() => setNumberOfBaskets(prev => Math.max(0, prev - 1))}
+                      className="w-10 h-full flex items-center justify-center text-white text-2xl font-light hover:bg-black/10 active:scale-90 transition-all border-none outline-none"
+                    >
+                      −
+                    </button>
+                    <div className="flex-1 flex flex-col items-center justify-center leading-none select-none">
+                      <span className="text-white font-black text-xl">{numberOfBaskets}</span>
+                      <span className="text-[9px] text-white/80 font-bold uppercase tracking-tighter mt-0.5">
+                        {numberOfBaskets === 1 ? 'canasta' : 'canastas'}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setNumberOfBaskets(prev => prev + 1)}
+                      className="w-10 h-full flex items-center justify-center text-white text-2xl font-light hover:bg-black/10 active:scale-90 transition-all border-none outline-none"
+                    >
+                      +
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
           </div>
 
           {/* Modalidad de pago */}
