@@ -183,7 +183,7 @@ function App() {
     },
   };
 
-  const seasonOrder = ['spring', 'summer', 'autumn', 'winter'];
+  const seasonOrder = ['autumn', 'winter', 'spring', 'summer'];
 
   useEffect(() => {
     const root = document.documentElement;
@@ -792,10 +792,10 @@ function App() {
           <div className="flex justify-between items-center mb-6">
             <div className={`inline-flex gap-1 ${isDarkMode ? 'bg-slate-800/50' : 'bg-gray-100/80'} p-1 rounded-full backdrop-blur-sm`}>
               {[
-                { key: 'spring', icon: <SunHorizon className="w-5 h-5" weight="duotone" /> },
-                { key: 'summer', icon: <Sun className="w-5 h-5" weight="duotone" /> },
                 { key: 'autumn', icon: <Leaf className="w-5 h-5" weight="duotone" /> },
                 { key: 'winter', icon: <Snowflake className="w-5 h-5" weight="duotone" /> },
+                { key: 'spring', icon: <SunHorizon className="w-5 h-5" weight="duotone" /> },
+                { key: 'summer', icon: <Sun className="w-5 h-5" weight="duotone" /> },
               ].map(({ key, icon }) => {
                 const isActive = season === key;
                 const activeStyles = `${seasonalColors[key].primary} text-white shadow-md`;
