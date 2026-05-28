@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo, useRef, useCallback, Component } from 'react';
-import { Sun, Moon, Gear, Copy, ShareNetwork, X, Trash, Plus, Users, CalendarBlank, CurrencyDollar, Percent, CreditCard, Calculator, Sparkle, Leaf, Snowflake, CaretDown, Check } from '@phosphor-icons/react'
+import { Sun, Moon, Gear, Copy, ShareNetwork, X, Trash, Plus, Users, CalendarBlank, CurrencyDollar, Percent, CreditCard, Calculator, Sparkle, Leaf, Snowflake, CaretDown, Check, SunHorizon } from '@phosphor-icons/react'
 import tariffsSummer from './data/tariffs.summer.json'
 import tariffsAutumn from './data/tariffs.autumn.json'
 import tariffsWinter from './data/tariffs.winter.json'
+import tariffsSpring from './data/tariffs.spring.json'
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -113,6 +114,7 @@ function App() {
   const [selectedCabin, setSelectedCabin] = useState('');
   const [discount, setDiscount] = useState(0);
   const [summerPaymentPlan, setSummerPaymentPlan] = useState('2');
+  const [springPaymentPlan, setSpringPaymentPlan] = useState('2');
   const [autumnPaymentPlan, setAutumnPaymentPlan] = useState('2');
   const [winterPaymentPlan, setWinterPaymentPlan] = useState('2');
   const [computed, setComputed] = useState(null);
@@ -136,7 +138,7 @@ function App() {
   const [manualDiscountEdited, setManualDiscountEdited] = useState(false);
   const [screen, setScreen] = useState('main');
   const [showMenu, setShowMenu] = useState(false);
-  const [overrides, setOverrides] = useState({ summer: null, autumn: null, winter: null });
+  const [overrides, setOverrides] = useState({ spring: null, summer: null, autumn: null, winter: null });
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -151,6 +153,13 @@ function App() {
   const waitingServiceWorker = useRef(null);
 
   const seasonalColors = {
+    spring: {
+      primary: isDarkMode ? 'bg-[#e879a0]' : 'bg-[#f472b6]',
+      secondary: isDarkMode ? 'bg-[#f472b6]' : 'bg-[#f9a8d4]',
+      accent: isDarkMode ? 'bg-[#4a0d26]' : 'bg-[#fdf2f8]',
+      border: isDarkMode ? 'border-[#9d174d]' : 'border-[#fbcfe8]',
+      text: isDarkMode ? 'text-[#f9a8d4]' : 'text-[#be185d]',
+    },
     summer: {
       primary: isDarkMode ? 'bg-[#19d16b]' : 'bg-[#2ee96f]',
       secondary: isDarkMode ? 'bg-[#14a955]' : 'bg-[#6ff28f]',
@@ -174,7 +183,7 @@ function App() {
     },
   };
 
-  const seasonOrder = ['autumn', 'winter'];
+  const seasonOrder = ['spring', 'summer', 'autumn', 'winter'];
 
   useEffect(() => {
     const root = document.documentElement;
@@ -192,7 +201,11 @@ function App() {
   }, [isSwipeEnabled]);
 
   useEffect(() => {
-    const base = season === 'autumn' ? tariffsAutumn : season === 'winter' ? tariffsWinter : tariffsSummer;
+    const base =
+      season === 'autumn' ? tariffsAutumn
+      : season === 'winter' ? tariffsWinter
+      : season === 'spring' ? tariffsSpring
+      : tariffsSummer;
     const ov = overrides?.[season];
     if (ov) {
       const merged = {
@@ -251,7 +264,7 @@ function App() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        const fallback = { summer: null, autumn: null, winter: null };
+        const fallback = { spring: null, summer: null, autumn: null, winter: null };
         setOverrides({ ...fallback, ...(parsed || {}) });
         if (parsed?.massagePriceCents) {
           setMassagePriceCents(parsed.massagePriceCents);
@@ -364,7 +377,7 @@ function App() {
     if (computed && canCalculate) {
       onCalculate();
     }
-  }, [discount, summerPaymentPlan, autumnPaymentPlan]);
+  }, [discount, springPaymentPlan, summerPaymentPlan, autumnPaymentPlan, winterPaymentPlan]);
 
   const saveOverrides = (newOverrides) => {
     try {
@@ -418,10 +431,7 @@ function App() {
       const alojamientoConDescuento = subtotalAlojamiento - discountAmount;
       // 3. Sumar masajes y canastas SIN descuento
       const massages = numberOfMassages || 0;
-      let totalMasajesCents = massages * massagePriceCents;
-      if (season === 'autumn') {
-        totalMasajesCents = Math.round(totalMasajesCents * 0.5);
-      }
+      const totalMasajesCents = massages * massagePriceCents;
 
       const baskets = numberOfBaskets || 0;
       const totalBasketCents = baskets * basketPriceCents;
@@ -436,9 +446,10 @@ function App() {
       const distributedPricePerNight = Math.round(priceForNightsWithMassages / nights);
       // ──────────────────────────────────────────────────────────────
 
-      const currentPlan = season === 'summer' ? summerPaymentPlan
-        : season === 'autumn' ? autumnPaymentPlan
-          : winterPaymentPlan;
+      const currentPlan = season === 'spring' ? springPaymentPlan
+        : season === 'summer' ? summerPaymentPlan
+          : season === 'autumn' ? autumnPaymentPlan
+            : winterPaymentPlan;
 
       let sena, segundo, saldo;
       if (currentPlan === '2') {
@@ -471,6 +482,7 @@ function App() {
         baskets,
         pricePerNightCents,
         season,
+        springPaymentPlan,
         summerPaymentPlan,
         autumnPaymentPlan,
         winterPaymentPlan,
@@ -511,15 +523,18 @@ function App() {
       return `$${pesos.toLocaleString('es-AR')}`;
     };
 
-    const seasonEmoji = computed.season === 'autumn' ? '🍂' : computed.season === 'winter' ? '❄️' : '🏖️';
+    const seasonEmoji =
+      computed.season === 'autumn' ? '🍂'
+      : computed.season === 'winter' ? '❄️'
+      : computed.season === 'spring' ? '🌸'
+      : '🏖️';
     const nights = computed.nights;
     const massages = computed.massages || 0;
 
-    const plan = computed.season === 'autumn'
-      ? computed.autumnPaymentPlan
-      : computed.season === 'winter'
-        ? computed.winterPaymentPlan
-        : computed.summerPaymentPlan;
+    const plan = computed.season === 'spring' ? computed.springPaymentPlan
+      : computed.season === 'autumn' ? computed.autumnPaymentPlan
+      : computed.season === 'winter' ? computed.winterPaymentPlan
+      : computed.summerPaymentPlan;
 
     let pagosSection = '';
     if (plan === '2') {
@@ -530,11 +545,7 @@ function App() {
 
     const inclusionList = [];
     if (massages > 0) {
-      if (computed.season === 'autumn') {
-        inclusionList.push(`💆🏻‍♀️ ${massages} ${massages > 1 ? 'sesiones' : 'sesión'} de masajes con 50% off +`);
-      } else {
-        inclusionList.push(`💆🏻‍♀️ ${massages} ${massages > 1 ? 'sesiones' : 'sesión'} de masajes +`);
-      }
+      inclusionList.push(`💆🏻‍♀️ ${massages} ${massages > 1 ? 'sesiones' : 'sesión'} de masajes +`);
     }
     if (computed.baskets > 0) {
       inclusionList.push(`🧺 Canasta de bienvenida con productos regionales`);
@@ -599,7 +610,11 @@ function App() {
     }
   };
 
-  const seasonEmoji = season === 'summer' ? '🏖️' : season === 'autumn' ? '🍂' : '❄️';
+  const seasonEmoji =
+    season === 'spring' ? '🌸'
+    : season === 'summer' ? '🏖️'
+    : season === 'autumn' ? '🍂'
+    : '❄️';
   const colors = seasonalColors[season] || seasonalColors.summer;
 
   const minSwipeDistance = 50;
@@ -777,6 +792,8 @@ function App() {
           <div className="flex justify-between items-center mb-6">
             <div className={`inline-flex gap-1 ${isDarkMode ? 'bg-slate-800/50' : 'bg-gray-100/80'} p-1 rounded-full backdrop-blur-sm`}>
               {[
+                { key: 'spring', icon: <SunHorizon className="w-5 h-5" weight="duotone" /> },
+                { key: 'summer', icon: <Sun className="w-5 h-5" weight="duotone" /> },
                 { key: 'autumn', icon: <Leaf className="w-5 h-5" weight="duotone" /> },
                 { key: 'winter', icon: <Snowflake className="w-5 h-5" weight="duotone" /> },
               ].map(({ key, icon }) => {
@@ -821,6 +838,8 @@ function App() {
                 setDiscount={setDiscount}
                 setManualDiscountEdited={setManualDiscountEdited}
                 discountOptions={discountOptions}
+                springPaymentPlan={springPaymentPlan}
+                setSpringPaymentPlan={setSpringPaymentPlan}
                 summerPaymentPlan={summerPaymentPlan}
                 setSummerPaymentPlan={setSummerPaymentPlan}
                 autumnPaymentPlan={autumnPaymentPlan}
@@ -872,8 +891,8 @@ function MainScreen({
   isDarkMode, season, seasonEmoji, colors, seasonalColors, pricePerNight, setPricePerNight,
   setManualPriceEdited, numberOfNights, setNumberOfNights, selectedCabin,
   setSelectedCabin, discount, setDiscount, setManualDiscountEdited,
-  discountOptions, summerPaymentPlan, setSummerPaymentPlan, autumnPaymentPlan, setAutumnPaymentPlan,
-  winterPaymentPlan, setWinterPaymentPlan, canCalculate,
+  discountOptions, springPaymentPlan, setSpringPaymentPlan, summerPaymentPlan, setSummerPaymentPlan,
+  autumnPaymentPlan, setAutumnPaymentPlan, winterPaymentPlan, setWinterPaymentPlan, canCalculate,
   onCalculate, onClear, computed, formatARS, onCopyToClipboard, onShare,
   getSummaryText, setFeedbackMessage, resumenRef,
   numberOfMassages, setNumberOfMassages, numberOfBaskets, setNumberOfBaskets
@@ -1085,9 +1104,9 @@ function MainScreen({
           </div>
 
           {/* Modalidad de pago */}
-          {(['summer', 'autumn', 'winter'].includes(season)) && (() => {
-            const currentPlan = season === 'summer' ? summerPaymentPlan : season === 'autumn' ? autumnPaymentPlan : winterPaymentPlan;
-            const setPlan = season === 'summer' ? setSummerPaymentPlan : season === 'autumn' ? setAutumnPaymentPlan : setWinterPaymentPlan;
+          {(['spring', 'summer', 'autumn', 'winter'].includes(season)) && (() => {
+            const currentPlan = season === 'spring' ? springPaymentPlan : season === 'summer' ? summerPaymentPlan : season === 'autumn' ? autumnPaymentPlan : winterPaymentPlan;
+            const setPlan = season === 'spring' ? setSpringPaymentPlan : season === 'summer' ? setSummerPaymentPlan : season === 'autumn' ? setAutumnPaymentPlan : setWinterPaymentPlan;
             return (
               <div className="space-y-4">
                 <label className={`block text-base font-medium ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}>Modalidad de pago</label>
